@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-900: #111827;
+  --color-primary: #3ef859;
+  /* Bright neon green from the design */
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 bg-white;
+    font-family: var(--font-sans);
+  }
+}

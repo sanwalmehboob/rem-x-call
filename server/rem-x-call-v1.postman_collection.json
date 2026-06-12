@@ -1,0 +1,951 @@
+{
+  "info": {
+    "_postman_id": "9a7b4c2d-5f90-4e75-a0f4-d12c81fb0a01",
+    "name": "REM-X-CALL API v1",
+    "description": "Collection for auth, companies, contacts, subscription plans, messages, dashboard, notifications, and subscription APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "companyId", "value": "1" },
+    { "key": "contactId", "value": "1" },
+    { "key": "productId", "value": "1" },
+    { "key": "planId", "value": "1" },
+    { "key": "messageId", "value": "1" },
+    { "key": "notificationId", "value": "1" },
+    { "key": "sessionId", "value": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "[Admin] Bootstrap First Admin",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"setupSecret\": \"your-setup-secret\",\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\",\n  \"clientType\": \"web\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/bootstrap-first-admin"
+          }
+        },
+        {
+          "name": "[Agent] Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newagent\",\n  \"email\": \"newagent@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"New\",\n  \"lastName\": \"Agent\",\n  \"phone\": \"+15550001111\",\n  \"clientType\": \"mobile\",\n  \"deviceId\": \"android-device-001\",\n  \"platform\": \"android\",\n  \"appVersion\": \"1.0.0\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/register"
+          }
+        },
+        {
+          "name": "[Both] Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPass123!\",\n  \"clientType\": \"mobile\",\n  \"deviceId\": \"ios-device-001\",\n  \"deviceName\": \"Habib iPhone\",\n  \"platform\": \"ios\",\n  \"appVersion\": \"1.0.0\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/login"
+          }
+        },
+        {
+          "name": "[Both] Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/forgot-password",
+            "description": "Send a 6-digit OTP to the user's email for password reset."
+          }
+        },
+        {
+          "name": "[Both] Verify Reset OTP",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/verify-reset-otp",
+            "description": "Verify the 6-digit OTP. Returns a resetToken on success."
+          }
+        },
+        {
+          "name": "[Both] Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"paste-reset-token-here\",\n  \"newPassword\": \"NewSecurePass123!\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/reset-password",
+            "description": "Complete password reset using the resetToken from verify-reset-otp."
+          }
+        },
+        {
+          "name": "[Both] Refresh Tokens",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"clientType\": \"mobile\",\n  \"appVersion\": \"1.0.1\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/refresh-tokens"
+          }
+        },
+        {
+          "name": "[Both] Get Me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/auth/me"
+          }
+        },
+        {
+          "name": "[Both] Update Me",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Habib\",\n  \"lastName\": \"Ahmed\",\n  \"phone\": \"+15550001111\",\n  \"sipExtension\": \"1001\",\n  \"currentPassword\": \"AdminPass123!\",\n  \"newPassword\": \"NewPass123!\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/me"
+          }
+        },
+        {
+          "name": "[Both] Upload Avatar",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/v1/auth/me/avatar"
+          }
+        },
+        {
+          "name": "[Both] Logout Current Session",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/auth/logout"
+          }
+        },
+        {
+          "name": "[Both] Logout All Sessions",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/auth/logout-all"
+          }
+        },
+        {
+          "name": "[Both] List Sessions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/auth/sessions"
+          }
+        },
+        {
+          "name": "[Both] Revoke One Session",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/auth/sessions/{{sessionId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Home screen APIs for the mobile app — stats, recent calls, follow-ups.",
+      "item": [
+        {
+          "name": "[Agent] Get Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/dashboard/stats?period=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "dashboard", "stats"],
+              "query": [
+                { "key": "period", "value": "30d", "description": "30d | 60d | 90d | overall" }
+              ]
+            },
+            "description": "Returns totalCalls, followUps, and percentage changes for the requested period."
+          }
+        },
+        {
+          "name": "[Agent] Recent Calls",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/dashboard/recent-calls?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "dashboard", "recent-calls"],
+              "query": [
+                { "key": "limit", "value": "5", "description": "Max results (default 5, max 50)" }
+              ]
+            },
+            "description": "Recent call activity with contact info, duration, and status."
+          }
+        },
+        {
+          "name": "[Agent] Follow-Ups",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/dashboard/follow-ups?limit=10&page=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "dashboard", "follow-ups"],
+              "query": [
+                { "key": "limit", "value": "10", "description": "Max results (default 10, max 50)" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "Contacts needing follow-up based on call outcomes."
+          }
+        },
+        {
+          "name": "[Agent] Product Overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/dashboard/product-overview?period=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "dashboard", "product-overview"],
+              "query": [
+                { "key": "period", "value": "30d", "description": "7d | 14d | 21d | 30d | 60d | 90d | overall" }
+              ]
+            },
+            "description": "Dashboard overview of total products and products sold statistics."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "[Admin] List Companies",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/companies?tab=all&q=&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "companies"],
+              "query": [
+                { "key": "tab", "value": "all" },
+                { "key": "q", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Create Company",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme LLC\",\n  \"businessEmail\": \"info@acme.com\",\n  \"subscriptionPlanId\": 1,\n  \"agentEmail\": \"agent@acme.com\",\n  \"agentFirstName\": \"Maya\",\n  \"agentLastName\": \"Khan\",\n  \"agentPhone\": \"+15554443333\",\n  \"trialDays\": 14,\n  \"discountPercent\": 10,\n  \"primaryBrandColor\": \"#000000\",\n  \"secondaryBrandColor\": \"#111111\",\n  \"brandFont\": \"Inter\",\n  \"whiteLabelLogoUrl\": \"https://example.com/logo.png\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/companies"
+          }
+        },
+        {
+          "name": "[Admin] Bulk Delete Companies",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyIds\": [2, 3]\n}"
+            },
+            "url": "{{baseUrl}}/v1/companies/bulk-delete"
+          }
+        },
+        {
+          "name": "[Admin] Get Company By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/companies/{{companyId}}"
+          }
+        },
+        {
+          "name": "[Admin] Update Company",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Global LLC\",\n  \"businessEmail\": \"support@acme.com\",\n  \"agentFirstName\": \"Maya\",\n  \"agentLastName\": \"Ali\",\n  \"agentPhone\": \"+15554443334\",\n  \"agentEmail\": \"agent.updated@acme.com\",\n  \"subscriptionPlanId\": 2,\n  \"subscriptionStatus\": \"active\",\n  \"discountPercent\": 5,\n  \"inviteStatus\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/companies/{{companyId}}"
+          }
+        },
+        {
+          "name": "[Admin] Delete Company",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/companies/{{companyId}}"
+          }
+        },
+        {
+          "name": "[Admin] Resend Company Invite",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/companies/{{companyId}}/resend-invite"
+          }
+        },
+        {
+          "name": "[Admin] Cancel Company Invite",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/companies/{{companyId}}/cancel-invite"
+          }
+        },
+        {
+          "name": "[Both] My Branding",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/companies/my-branding"
+          }
+        },
+        {
+          "name": "[Both] Update My Branding",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Acme LLC\",\n  \"businessEmail\": \"info@acme.com\",\n  \"whiteLabelLogoUrl\": \"https://example.com/new-logo.png\",\n  \"primaryBrandColor\": \"#0A84FF\",\n  \"secondaryBrandColor\": \"#111111\",\n  \"brandFont\": \"Inter\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/companies/my-branding"
+          }
+        },
+        {
+          "name": "[Both] Upload Company Logo",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/v1/companies/upload-logo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts",
+      "item": [
+        {
+          "name": "[Agent] List Contacts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts?tab=unassigned&search=&page=1&pageSize=20&callStatus=answered&lastContacted=7d",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "contacts"],
+              "query": [
+                { "key": "tab", "value": "unassigned" },
+                { "key": "search", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "callStatus", "value": "answered", "description": "never_called | answered | missed | no_answer | failed" },
+                { "key": "lastContacted", "value": "7d", "description": "today | 7d | 30d" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Agent] Get Contact By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}",
+            "description": "Returns full details for a single contact."
+          }
+        },
+        {
+          "name": "[Agent] Get Contact Overview",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}/overview?period=30d",
+            "description": "Returns attempts, percentage changes, and next follow-up details."
+          }
+        },
+        {
+          "name": "[Agent] Get Contact Call History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/{{contactId}}/calls?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "contacts", "{{contactId}}", "calls"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Paginated call history for a specific contact."
+          }
+        },
+        {
+          "name": "[Agent] Create Contact",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"phone\": \"+15556667777\",\n  \"companyName\": \"Acme LLC\",\n  \"status\": \"active\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/contacts"
+          }
+        },
+        {
+          "name": "[Agent] Update Contact",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John D\",\n  \"phone\": \"+15556660000\",\n  \"companyName\": \"Acme International\",\n  \"status\": \"inactive\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}"
+          }
+        },
+        {
+          "name": "[Agent] Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}"
+          }
+        },
+        {
+          "name": "[Agent] Flag Fraud",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Customer used a stolen credit card number during the call.\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}/flag-fraud"
+          }
+        },
+        {
+          "name": "[Agent] Raise Dispute",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disputeType\": \"incorrect_billing\",\n  \"description\": \"Customer was charged twice for the same service.\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}/dispute"
+          }
+        },
+        {
+          "name": "[Agent] Get Dispute Types",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/contacts/dispute-types"
+          }
+        },
+        {
+          "name": "[Admin] Assign Contact",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agentUserId\": 5\n}"
+            },
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}/assign"
+          }
+        },
+        {
+          "name": "[Admin] Unassign Contact",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/contacts/{{contactId}}/unassign"
+          }
+        },
+        {
+          "name": "[Admin] List Call Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/call-logs?search=&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "contacts", "call-logs"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] List Assignable Agents",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/contacts/agents?page=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "contacts", "agents"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription Plans (Admin)",
+      "item": [
+        {
+          "name": "[Admin] List Plans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/subscription-plans?activeOnly=false&q=&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "subscription-plans"],
+              "query": [
+                { "key": "activeOnly", "value": "false" },
+                { "key": "q", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Admin] Create Plan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pro\",\n  \"description\": \"Pro plan\",\n  \"priceMonthly\": 49,\n  \"billingCycle\": \"monthly\",\n  \"maxAgents\": 10,\n  \"contactLimitLabel\": \"10k contacts\",\n  \"dialerEnabled\": true,\n  \"chatEnabled\": true,\n  \"recordingEnabled\": true,\n  \"whiteLabelEnabled\": true,\n  \"isActive\": true,\n  \"sortOrder\": 2\n}"
+            },
+            "url": "{{baseUrl}}/v1/subscription-plans"
+          }
+        },
+        {
+          "name": "[Admin] Update Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pro Plus\",\n  \"priceMonthly\": 59,\n  \"billingCycle\": \"yearly\",\n  \"maxAgents\": 15,\n  \"isActive\": true\n}"
+            },
+            "url": "{{baseUrl}}/v1/subscription-plans/{{planId}}"
+          }
+        },
+        {
+          "name": "[Admin] Delete Plan",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/subscription-plans/{{planId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions (User)",
+      "description": "Authenticated user's own subscription status.",
+      "item": [
+        {
+          "name": "[Agent] Get Current Subscription",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/subscriptions/current",
+            "description": "Returns the user's active subscription plan, status, features, and billing info."
+          }
+        },
+        {
+          "name": "[Agent] Get Subscription History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/subscriptions/history?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "subscriptions", "history"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Returns the company billing history."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "[Both] List Conversations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/messages/conversations?q=&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "messages", "conversations"],
+              "query": [
+                { "key": "q", "value": "" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Both] Unread Count",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/messages/unread-count"
+          }
+        },
+        {
+          "name": "[Both] Get Peer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/messages/peer?companyId={{companyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "messages", "peer"],
+              "query": [{ "key": "companyId", "value": "{{companyId}}" }]
+            }
+          }
+        },
+        {
+          "name": "[Both] List Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/messages?companyId={{companyId}}&page=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "messages"],
+              "query": [
+                { "key": "companyId", "value": "{{companyId}}" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Both] Create Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": {{companyId}},\n  \"content\": \"Hello from dashboard\",\n  \"status\": \"sent\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/messages"
+          }
+        },
+        {
+          "name": "[Both] Create Message with Attachment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": {{companyId}},\n  \"attachmentUrl\": \"https://example.com/files/doc.pdf\",\n  \"attachmentOriginalName\": \"doc.pdf\",\n  \"status\": \"sent\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/messages"
+          }
+        },
+        {
+          "name": "[Both] Mark Messages Read",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyId\": {{companyId}}\n}"
+            },
+            "url": "{{baseUrl}}/v1/messages/read"
+          }
+        },
+        {
+          "name": "[Both] Update Message Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"read\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/messages/{{messageId}}/status"
+          }
+        },
+        {
+          "name": "[Both] Upload Message Attachment",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/v1/messages/upload"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications (Agent)",
+      "description": "Agent push notification tokens and notifications management.",
+      "item": [
+        {
+          "name": "[Agent] Register FCM Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-device-token-string...\",\n  \"platform\": \"android\",\n  \"deviceId\": \"android-device-001\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/notifications/fcm-token"
+          }
+        },
+        {
+          "name": "[Agent] Unregister FCM Token",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-device-token-string...\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/notifications/fcm-token"
+          }
+        },
+        {
+          "name": "[Agent] List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/notifications?filter=all&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "notifications"],
+              "query": [
+                { "key": "filter", "value": "all", "description": "all | unread | read | archived" },
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Agent] Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/v1/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "[Agent] Archive Notification",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/v1/notifications/{{notificationId}}/archive"
+          }
+        },
+        {
+          "name": "[Agent] Mark All Notifications Read",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/notifications/read-all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products (Agent)",
+      "item": [
+        {
+          "name": "[Agent] List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/products?page=1&pageSize=5&search=&category=&status=&name=",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "5" },
+                { "key": "search", "value": "" },
+                { "key": "category", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "name", "value": "" }
+              ]
+            },
+            "description": "Get a paginated list of products. Can filter by search, category, status, and precise product name."
+          }
+        },
+        {
+          "name": "[Agent] Get Product By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/products/{{productId}}",
+            "description": "Returns full details for a single product."
+          }
+        },
+        {
+          "name": "[Agent] Get Product Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/products/stats?period=30d",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "products", "stats"],
+              "query": [
+                { "key": "period", "value": "30d", "description": "30d | 60d | 90d | overall" }
+              ]
+            },
+            "description": "Returns product counts and sold statistics."
+          }
+        },
+        {
+          "name": "[Agent] Get Out of Stock Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/products/out-of-stock?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "products", "out-of-stock"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Returns out of stock products."
+          }
+        },
+        {
+          "name": "[Agent] Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Headset\",\n  \"image\": \"data:image/png;base64,...\",\n  \"category\": \"Electronics\",\n  \"qty\": 200,\n  \"price\": 76\n}"
+            },
+            "url": "{{baseUrl}}/v1/products"
+          }
+        },
+        {
+          "name": "[Agent] Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Headset Pro\",\n  \"image\": \"data:image/png;base64,...\",\n  \"category\": \"Electronics\",\n  \"qty\": 195,\n  \"price\": 80\n}"
+            },
+            "url": "{{baseUrl}}/v1/products/{{productId}}"
+          }
+        },
+        {
+          "name": "[Agent] Delete Product",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/products/{{productId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calls",
+      "item": [
+        {
+          "name": "[Agent] Initiate Call",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contactId}}\",\n  \"sipExtension\": \"1001\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/calls/initiate",
+            "description": "Originates a dynamic call to Asterisk AMI and connects it to the agent."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/health",
+            "description": "Simple health check — no auth required."
+          }
+        }
+      ]
+    }
+  ]
+}

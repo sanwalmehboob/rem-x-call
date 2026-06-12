@@ -1,0 +1,41 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment
+.env
+.env.production
+.env.staging
+
+# Uploads (chat attachments)
+server/uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Databases
+migrations/
+seeders/
+!server/migrations/
+!server/migrations/*.js
+!server/src/seeders/
+!server/src/seeders/*.js
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.pem
+docs
