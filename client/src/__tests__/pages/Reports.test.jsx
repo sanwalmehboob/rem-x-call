@@ -20,8 +20,9 @@ describe('Reports Component', () => {
     // Check main stats
     expect(screen.getByText('Call Statistics')).toBeInTheDocument();
     
-    // Total Calls container text (since 42,310 appears multiple times, use specific checks)
-    expect(screen.getByText('1,000')).toBeInTheDocument();
+    expect(screen.getByText('Contacts Overview')).toBeInTheDocument();
+    expect(screen.getByText('1,245')).toBeInTheDocument();
+    expect(screen.getByText('892')).toBeInTheDocument();
     
     // Check Generated revenue
     expect(screen.getByText('Generated Revenue')).toBeInTheDocument();

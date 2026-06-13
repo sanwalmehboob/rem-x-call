@@ -48,11 +48,11 @@ describe('Settings Component', () => {
     render(<Settings />, { wrapper: BrowserRouter });
 
     expect(screen.getByRole('heading', { level: 1, name: /settings/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: /basic info/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /account details/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Ada')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Admin')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('ada@example.com')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/enter password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/login email/i)).toBeDisabled();
+    expect(screen.getByPlaceholderText(/enter new password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^update$/i })).toBeInTheDocument();
   });
 
@@ -73,6 +73,7 @@ describe('Settings Component', () => {
     await waitFor(() => expect(api.patch).toHaveBeenCalled());
     // The form submits whatever state it holds — we verify the API was called
     expect(api.patch).toHaveBeenCalledWith('/auth/me', expect.any(Object));
+    expect(api.patch.mock.calls[0][1]).not.toHaveProperty('email');
     expect(refreshMe).toHaveBeenCalled();
   });
 });

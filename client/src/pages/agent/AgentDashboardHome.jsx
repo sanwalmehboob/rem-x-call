@@ -15,9 +15,9 @@ const fmtDuration = (seconds) => {
 };
 
 const statusDot = (status) => {
-  if (status === 'completed') return 'bg-[#16a34a]';
-  if (status === 'missed') return 'bg-[#ef4444]';
-  return 'bg-[#84cc16]'; // in_progress
+  if (status === 'completed') return 'bg-gray-500';
+  if (status === 'missed') return 'bg-gray-400';
+  return 'bg-gray-300'; // in_progress
 };
 
 const statusLabel = (status) => {
@@ -185,7 +185,7 @@ export default function AgentDashboardHome() {
           <div className="w-full xl:w-[58%] h-[300px] min-h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8E8E8" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#DADDE3" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
@@ -200,7 +200,7 @@ export default function AgentDashboardHome() {
                   domain={[0, yAxisMax]}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                  cursor={{ fill: 'rgba(107,114,128,0.12)' }}
                   contentStyle={{
                     borderRadius: 12,
                     border: 'none',
@@ -208,9 +208,9 @@ export default function AgentDashboardHome() {
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="failed" stackId="a" fill="#e42828" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="busy" stackId="a" fill="#86efac" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="connected" stackId="a" fill="#166534" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="failed" stackId="a" fill="#9CA3AF" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="busy" stackId="a" fill="#D1D5DB" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="connected" stackId="a" fill="#6B7280" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

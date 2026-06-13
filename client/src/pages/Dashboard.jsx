@@ -222,16 +222,16 @@ const Dashboard = () => {
 
   /* ── render ─────────────────────────────────────────────────── */
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-8 animate-in fade-in duration-500">
+    <div className="flex min-h-0 flex-1 flex-col space-y-6 md:space-y-8 animate-in fade-in duration-500">
       {/* Page heading */}
-      <h1 className="text-[32px] font-display font-[900] text-gray-900 tracking-tight mb-2">
+      <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-gray-900 tracking-tight mb-1 md:mb-2">
         Dashboard
       </h1>
 
       {/* ───────────────────────── OVERVIEW (green section) ───────────────────────── */}
       <section
-        className="w-full rounded-[16px] pt-4 pr-2 pb-2 pl-2 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
-        style={{ height: '282px', background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
+        className="w-full rounded-[16px] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+        style={{ background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
       >
         {/* Section header row */}
         <div className="flex items-center justify-between mb-4 px-3">
@@ -242,16 +242,13 @@ const Dashboard = () => {
         </div>
 
         {/* 3-column stat cards */}
-        <div className="flex gap-2 flex-1 px-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {/* Agents Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Agents Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Agents</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -261,7 +258,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Agents</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.agents.active}
@@ -274,14 +271,11 @@ const Dashboard = () => {
           </div>
 
           {/* Subscriptions Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Subscriptions Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Subscriptions</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -291,7 +285,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Subscriptions</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.subscriptions.active}
@@ -304,14 +298,11 @@ const Dashboard = () => {
           </div>
 
           {/* Contacts Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Contacts Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Contacts</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -321,7 +312,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Contacts</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.contacts.active}
@@ -336,10 +327,7 @@ const Dashboard = () => {
       </section>
 
       {/* ────────────────────────── CALLS SECTION ──────────────────────────── */}
-      <section 
-        className="w-full bg-white rounded-[16px] pt-4 pr-2 pb-6 pl-2 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100"
-        style={{ height: '441px' }}
-      >
+      <section className="w-full bg-white rounded-[16px] p-4 sm:p-6 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100">
         <div className="flex items-center justify-between mb-8 px-4">
           <h2 className="text-[22px] font-display font-[900] tracking-tight text-[#1a1a1a]">
             Calls
@@ -347,9 +335,9 @@ const Dashboard = () => {
           <WeeklyDropdown />
         </div>
 
-        <div className="flex flex-1 gap-[34px] px-4">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
           {/* Chart */}
-          <div className="flex-1 h-full relative">
+          <div className="relative min-h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={defaultChartData}
@@ -394,7 +382,7 @@ const Dashboard = () => {
           </div>
 
           {/* 2×2 stat cards */}
-          <div className="w-[45%] grid grid-cols-2 gap-4 h-full">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
               { title: 'Connected Calls', val: stats.totalCalls || '0', isUp: true, color: 'bg-[#ADF808]' },
               { title: 'No Answer', val: '0', isUp: true, color: 'bg-[#5AD43D]' },
@@ -403,11 +391,11 @@ const Dashboard = () => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white rounded-[16px] p-6 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-shadow"
+                className="bg-white rounded-[16px] min-h-[132px] p-5 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-shadow"
               >
                 <div className={`w-3 h-3 rounded-full ${stat.color}`} />
                 <div>
-                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1 break-words">
                     {stat.title}
                   </p>
                   <div className="flex items-baseline gap-2">
@@ -428,7 +416,7 @@ const Dashboard = () => {
         className="flex flex-col gap-[32px] min-h-0"
       >
         {/* Live Calls Activity */}
-        <section className="bg-white rounded-[16px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
+        <section className="bg-white rounded-[16px] p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
           <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
               Live Calls Activity
@@ -448,7 +436,11 @@ const Dashboard = () => {
               <WeeklyDropdown />
             </div>
           </div>
-          <div className="w-full overflow-x-auto scrollbar-hide">
+          <div
+            className="-mx-4 w-[calc(100%+2rem)] overflow-x-auto overscroll-x-contain px-4 pb-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x] sm:mx-0 sm:w-full sm:px-0"
+            role="region"
+            aria-label="Live calls table"
+          >
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-50">
@@ -487,13 +479,13 @@ const Dashboard = () => {
                 ) : (
                   recentCalls.map((call) => (
                     <tr key={call.id} className="border-b border-gray-50/50 hover:bg-gray-50/30 transition-colors">
-                      <td className="py-4 font-semibold text-gray-900 text-[14px]">
+                      <td className="py-4 pr-4 font-semibold text-gray-900 text-[14px]">
                         {call.contact?.fullName || 'Unknown Agent'}
                       </td>
-                      <td className="py-4 text-gray-500 text-[14px]">
+                      <td className="py-4 pr-4 text-gray-500 text-[14px]">
                         {call.contact?.phone || 'N/A'}
                       </td>
-                      <td className="py-4 text-gray-500 text-[14px]">
+                      <td className="py-4 pr-4 text-gray-500 text-[14px]">
                         {call.duration || '0s'}
                       </td>
                       <td className="py-4">
@@ -525,14 +517,18 @@ const Dashboard = () => {
 
         {/* Agent Performance Overview */}
         <section className="bg-white rounded-[16px] flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100">
-          <div className="flex items-center justify-between p-6 pb-2">
-            <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
+          <div className="flex flex-col gap-3 p-4 pb-2 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pb-2">
+            <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a] leading-tight">
               Agent Performance Overview
             </h2>
             <WeeklyDropdown />
           </div>
-          <div className="w-full overflow-x-auto scrollbar-hide px-6">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+          <div
+            className="w-full overflow-x-auto overscroll-x-contain px-4 pb-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x] sm:px-6"
+            role="region"
+            aria-label="Agent performance table"
+          >
+            <table className="w-full text-left border-collapse min-w-[760px]">
               <thead>
                 <tr className="border-b border-gray-50">
                   <th className="py-4 text-gray-400 font-bold text-[11px] uppercase tracking-widest">
@@ -577,7 +573,7 @@ const Dashboard = () => {
                     const isOnline = onlineUserIds.has(item.id);
                     return (
                       <tr key={idx} className="border-b border-gray-50/50 hover:bg-gray-50/30 transition-colors">
-                        <td className="py-4 font-semibold text-gray-900 text-[14px]">
+                        <td className="py-4 pr-4 font-semibold text-gray-900 text-[14px]">
                           <div className="flex items-center gap-2.5">
                             <span className="relative flex h-2.5 w-2.5 shrink-0">
                               {isOnline && (
@@ -585,16 +581,16 @@ const Dashboard = () => {
                               )}
                               <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`}></span>
                             </span>
-                            <span>{item.agentName}</span>
+                            <span className="whitespace-nowrap">{item.agentName}</span>
                           </div>
                         </td>
-                        <td className="py-4 text-gray-500 text-[14px]">
-                          {item.company}
+                        <td className="py-4 pr-4 text-gray-500 text-[14px]">
+                          <span className="block max-w-[220px] truncate">{item.company}</span>
                         </td>
-                        <td className="py-4 text-gray-900 font-bold text-[14px]">
+                        <td className="py-4 pr-4 text-gray-900 font-bold text-[14px]">
                           {item.callsToday}
                         </td>
-                        <td className="py-4">
+                        <td className="py-4 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 w-16 bg-gray-100 rounded-full overflow-hidden">
                               <div className="h-full bg-[#ADF808]" style={{ width: `${item.connectedPercent}%` }} />
@@ -613,7 +609,7 @@ const Dashboard = () => {
             </table>
           </div>
           {agentPerformanceMeta && (
-            <div className="px-6 pb-6">
+            <div className="px-4 pb-5 sm:px-6 sm:pb-6">
               <PaginationFooter
                 page={agentPerformanceMeta.currentPage || perfPage}
                 pageSize={agentPerformanceMeta.itemsPerPage || 5}

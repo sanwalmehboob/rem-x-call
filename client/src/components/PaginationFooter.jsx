@@ -17,8 +17,8 @@ export default function PaginationFooter({
   const end = Math.min(page * pageSize, totalItems);
 
   return (
-    <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-gray-100 pt-4">
-      <p className="text-[13px] font-semibold text-gray-500">
+    <div className="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-4 md:flex-row md:items-center md:justify-between">
+      <p className="text-[13px] font-semibold text-gray-500 leading-5">
         Showing <span className="font-bold text-gray-900">{start}</span> to{' '}
         <span className="font-bold text-gray-900">{end}</span> of{' '}
         <span className="font-bold text-gray-900">{totalItems}</span> {itemLabel}
@@ -44,18 +44,18 @@ export default function PaginationFooter({
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(Math.max(1, page - 1))}
-          className="px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="min-w-[86px] px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Previous
         </button>
-        <span className="px-2 text-[13px] font-bold text-gray-800">
+        <span className="min-w-[84px] px-2 text-center text-[13px] font-bold text-gray-800 whitespace-nowrap">
           Page {page} of {safeTotalPages}
         </span>
         <button
           type="button"
           disabled={page >= safeTotalPages}
           onClick={() => onPageChange(Math.min(safeTotalPages, page + 1))}
-          className="px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="min-w-[70px] px-3.5 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Next
         </button>
