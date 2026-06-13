@@ -88,7 +88,7 @@ export default function AgentBillingPage() {
   }, [search, cycleFilter, BILLING_ROWS]);
 
   return (
-    <div className="w-full max-w-[1100px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
+    <div className="w-full flex flex-col gap-8 animate-in fade-in duration-500">
       <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight px-1">Subscription & Billings</h1>
 
       {/* Current plan card */}

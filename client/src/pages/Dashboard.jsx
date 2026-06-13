@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -173,6 +173,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [liveCallSearch, setLiveCallSearch] = useState('');
 
   useEffect(() => {
     if (!token) return undefined;
@@ -257,6 +258,22 @@ const Dashboard = () => {
   }, [perfPage]);
 
   const hasChartData = defaultChartData.some((d) => d.failed + d.busy + d.connected > 0);
+  const filteredRecentCalls = useMemo(() => {
+    const q = liveCallSearch.trim().toLowerCase();
+    if (!q) return recentCalls;
+    return recentCalls.filter((call) =>
+      [
+        call.contact?.fullName,
+        call.contact?.phone,
+        call.status,
+        call.duration,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [recentCalls, liveCallSearch]);
 
   /* ── render ─────────────────────────────────────────────────── */
   return (
@@ -467,11 +484,24 @@ const Dashboard = () => {
       >
         {/* Live Calls Activity */}
         <section className="bg-white rounded-[16px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
               Live Calls Activity
             </h2>
-            <WeeklyDropdown />
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-[260px]">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="search"
+                  value={liveCallSearch}
+                  onChange={(e) => setLiveCallSearch(e.target.value)}
+                  placeholder="Search calls"
+                  autoComplete="off"
+                  className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-[13px] font-semibold text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7ae230]/40"
+                />
+              </div>
+              <WeeklyDropdown />
+            </div>
           </div>
           <div className="w-full overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse min-w-[600px]">
@@ -500,17 +530,17 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentCalls.length === 0 ? (
+                {filteredRecentCalls.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
                       className="py-20 text-center text-[14px] font-medium text-gray-400"
                     >
-                      No Live call activities yet to found
+                      {liveCallSearch.trim() ? 'No live calls match your search.' : 'No Live call activities yet to found'}
                     </td>
                   </tr>
                 ) : (
-                  recentCalls.map((call) => (
+                  filteredRecentCalls.map((call) => (
                     <tr key={call.id} className="border-b border-gray-50/50 hover:bg-gray-50/30 transition-colors">
                       <td className="py-4 font-semibold text-gray-900 text-[14px]">
                         {call.contact?.fullName || 'Unknown Agent'}

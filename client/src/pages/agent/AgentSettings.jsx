@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Eye, EyeOff, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,13 +8,22 @@ const DEFAULT_PRIMARY = '#000000';
 const DEFAULT_SECONDARY = '#111111';
 
 export default function AgentSettings() {
-  const { refreshMe } = useAuth();
+  const { user, refreshMe } = useAuth();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [account, setAccount] = useState({
+    firstName: '',
+    lastName: '',
+    username: '',
+    phone: '',
+    sipExtension: '',
+    password: '',
+  });
   const [branding, setBranding] = useState({
     whiteLabelEnabled: false,
     whiteLabelLogoUrl: '',
@@ -24,6 +33,18 @@ export default function AgentSettings() {
     companyName: '',
     businessEmail: '',
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setAccount({
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      username: user.username || '',
+      phone: user.phone || '',
+      sipExtension: user.sipExtension || '',
+      password: '',
+    });
+  }, [user]);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +104,17 @@ export default function AgentSettings() {
     setError('');
     setSuccess('');
     try {
+      const accountPayload = {
+        firstName: account.firstName,
+        lastName: account.lastName,
+        username: account.username,
+        phone: account.phone,
+        sipExtension: account.sipExtension,
+      };
+      const nextPassword = account.password.trim();
+      if (nextPassword) accountPayload.newPassword = nextPassword;
+      await api.patch('/auth/me', accountPayload);
+
       const updateData = {
         companyName: branding.companyName,
         businessEmail: branding.businessEmail || null,
@@ -95,6 +127,7 @@ export default function AgentSettings() {
       }
       await api.patch('/companies/my-branding', updateData);
       await refreshMe();
+      setAccount((prev) => ({ ...prev, password: '' }));
       setSuccess('Settings updated successfully.');
     } catch (e) {
       setError(e?.response?.data?.message || 'Failed to update settings.');
@@ -104,7 +137,7 @@ export default function AgentSettings() {
   };
 
   return (
-    <div className="w-full max-w-[960px] mx-auto bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-10 flex flex-col animate-in fade-in duration-500">
+    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-10 flex flex-col animate-in fade-in duration-500">
       <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight mb-10">Settings</h1>
       {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</div>}
       {success && <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">{success}</div>}
@@ -113,6 +146,103 @@ export default function AgentSettings() {
         className="space-y-10"
         onSubmit={handleSave}
       >
+        <section className="space-y-6">
+          <h2 className="text-[16px] font-bold text-gray-900 mb-1">Account Details</h2>
+          <p className="text-[13px] font-medium text-gray-500 mb-6">
+            Update your personal details and password. Your login email cannot be edited here.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">First Name</label>
+              <input
+                type="text"
+                disabled={loading}
+                value={account.firstName}
+                onChange={(e) => setAccount((prev) => ({ ...prev, firstName: e.target.value }))}
+                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">Last Name</label>
+              <input
+                type="text"
+                disabled={loading}
+                value={account.lastName}
+                onChange={(e) => setAccount((prev) => ({ ...prev, lastName: e.target.value }))}
+                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">Username</label>
+              <input
+                type="text"
+                disabled={loading}
+                value={account.username}
+                onChange={(e) => setAccount((prev) => ({ ...prev, username: e.target.value }))}
+                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">Login Email</label>
+              <input
+                type="email"
+                disabled
+                value={user?.email || ''}
+                className="w-full cursor-not-allowed bg-gray-100 border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">Phone</label>
+              <input
+                type="tel"
+                disabled={loading}
+                value={account.phone}
+                onChange={(e) => setAccount((prev) => ({ ...prev, phone: e.target.value }))}
+                placeholder="Phone number"
+                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">SIP Extension</label>
+              <input
+                type="text"
+                disabled={loading}
+                value={account.sipExtension}
+                onChange={(e) => setAccount((prev) => ({ ...prev, sipExtension: e.target.value }))}
+                placeholder="e.g. 1001"
+                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <div className="md:col-span-2 max-w-md">
+              <label className="block text-[13px] font-bold text-gray-800 mb-2">New Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  disabled={loading}
+                  value={account.password}
+                  onChange={(e) => setAccount((prev) => ({ ...prev, password: e.target.value }))}
+                  autoComplete="new-password"
+                  placeholder="Enter new password"
+                  className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 pl-4 pr-12 rounded-xl text-[14px] font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-900"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="mt-2 text-[12px] font-medium text-gray-400">Leave blank to keep your current password.</p>
+            </div>
+          </div>
+        </section>
+
+        <hr className="border-gray-100" />
+
         <section className="space-y-6">
           <h2 className="text-[16px] font-bold text-gray-900 mb-1">Company Details</h2>
           <p className="text-[13px] font-medium text-gray-500 mb-6">
