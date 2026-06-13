@@ -1541,10 +1541,10 @@ export default function CompanyManagement() {
 
   // --- List View Mode ---
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#f4f5f7] px-6 lg:px-10">
+    <div className="flex h-full min-h-0 min-w-0 flex-col bg-[#f4f5f7] px-4 sm:px-6 lg:px-10">
       {/* Page Header */}
-      <div className="shrink-0 pt-6 lg:pt-10 pb-6 lg:pb-8">
-        <h1 className="text-[24px] lg:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
+      <div className="shrink-0 pt-5 pb-5 sm:pt-6 lg:pt-10 lg:pb-8">
+        <h1 className="text-[24px] leading-tight sm:text-[28px] lg:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
           Company Management
         </h1>
         {companyErr && currentTab === 'all' && (
@@ -1553,10 +1553,10 @@ export default function CompanyManagement() {
       </div>
 
       {/* Shared Nav/Actions Header */}
-      <div className="mb-6 flex shrink-0 flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
+      <div className="mb-6 flex shrink-0 flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         
         {/* Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-4 xl:pb-0 scrollbar-none -mx-4 px-4 lg:mx-0 lg:px-0">
+        <div className="grid w-full grid-cols-2 gap-2 border-b border-gray-200 pb-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:border-b-0 sm:pb-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -1566,7 +1566,7 @@ export default function CompanyManagement() {
                   search: searchParams.toString() ? `?${searchParams.toString()}` : '',
                 })
               }
-              className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${
+              className={`min-h-[42px] rounded-xl px-3 py-2 text-center text-[12px] font-bold leading-snug transition-all sm:min-h-0 sm:px-4 sm:text-[13px] ${
                 currentTab === tab.id 
                 ? 'bg-[#8bed21] text-gray-900 shadow-sm' 
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
@@ -1578,8 +1578,8 @@ export default function CompanyManagement() {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(220px,1fr)_auto_auto] sm:items-center xl:w-auto">
+          <div className="relative min-w-0">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
               type="text" 
@@ -1599,13 +1599,13 @@ export default function CompanyManagement() {
                 setCompanyErr('');
                 setViewMode('add');
               }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-black text-white shadow-sm rounded-xl text-[13px] font-bold hover:bg-gray-900 transition-all active:scale-[0.98] whitespace-nowrap"
+              className="flex w-full items-center justify-center gap-2 px-5 py-2.5 bg-black text-white shadow-sm rounded-xl text-[13px] font-bold hover:bg-gray-900 transition-all active:scale-[0.98] whitespace-nowrap sm:w-auto"
             >
               <Plus className="w-4 h-4" strokeWidth={3} /> Add New Company
             </button>
           )}
 
-          <button className="flex items-center justify-between gap-2 px-5 py-2.5 bg-black text-white shadow-sm rounded-xl text-[13px] font-bold hover:bg-gray-900 transition-colors whitespace-nowrap">
+          <button className="flex w-full items-center justify-center gap-2 px-5 py-2.5 bg-black text-white shadow-sm rounded-xl text-[13px] font-bold hover:bg-gray-900 transition-colors whitespace-nowrap sm:w-auto">
             Export <ArrowUpRight className="w-4 h-4 ml-1 opacity-60" strokeWidth={3} />
           </button>
         </div>
@@ -1626,10 +1626,10 @@ export default function CompanyManagement() {
         </div>
       )}
 
-      <div className="mb-6 w-full flex flex-col">
-        <div className="overflow-hidden rounded-[24px] bg-white shadow-sm ring-1 ring-gray-100">
+      <div className="mb-6 flex w-full min-w-0 flex-col">
+        <div className="min-w-0 overflow-hidden rounded-[20px] bg-white shadow-sm ring-1 ring-gray-100 sm:rounded-[24px]">
           {/* Horizontal scroll only (wide columns). Rows use pagination — no inner vertical scroll. */}
-          <div className="company-table-scroll w-full overflow-x-auto pb-2">
+          <div className="company-table-scroll w-full max-w-full overflow-x-auto overscroll-x-contain pb-2 [-webkit-overflow-scrolling:touch]">
             {currentTab === 'all' && (
               <AllCompaniesTable
                 data={allTableData}

@@ -123,7 +123,7 @@ export default function AgentDashboardLayout() {
   }, [isProfileMenuOpen]);
 
   return (
-    <div className="relative flex h-screen min-h-0 w-full overflow-hidden bg-[#f4f5f7] font-sans">
+    <div className="relative flex h-screen h-dvh min-h-0 w-full overflow-hidden bg-[#f4f5f7] font-sans">
       {isSidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[55]"
@@ -299,7 +299,7 @@ export default function AgentDashboardLayout() {
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-12 pt-2 [-webkit-overflow-scrolling:touch] lg:px-8 scrollbar-hide">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-12 pt-4 [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] lg:px-8 lg:pt-2">
           <Outlet />
         </div>
       </main>

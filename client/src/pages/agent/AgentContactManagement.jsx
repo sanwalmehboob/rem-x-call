@@ -34,11 +34,11 @@ function PillDropdown({ label, value, options, onChange, renderOption }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.id === value) || options[0];
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between gap-2 min-w-[140px] px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 shadow-sm hover:bg-gray-50/80 transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 shadow-sm hover:bg-gray-50/80 transition-colors sm:min-w-[140px]"
       >
         <span className="truncate">{selected.label}</span>
         <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -184,10 +184,10 @@ export default function AgentContactManagement() {
   };
 
   return (
-    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-4 sm:p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-7 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
+          <h1 className="text-[26px] leading-tight md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
             Contact Management
           </h1>
           <p className="text-[13px] font-bold text-gray-500 mt-1">
@@ -197,7 +197,7 @@ export default function AgentContactManagement() {
       </div>
 
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
           <PillDropdown
             label="Status"
             value={statusFilter}
@@ -242,45 +242,46 @@ export default function AgentContactManagement() {
         </div>
       )}
 
-      <div className="flex-1 w-full overflow-x-auto rounded-xl ring-1 ring-gray-200/50 -mx-1">
-        <table className="w-full text-left border-collapse min-w-[960px]">
-          <thead>
-            <tr className="border-b border-gray-100 bg-[#fafafa] text-[11px] font-bold text-gray-400">
-              <th className="p-4 w-10">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5" /> Contact Name
-                </span>
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5" /> Phone Number
-                </span>
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5" /> Company
-                </span>
-              </th>
-              <th className="p-4 py-3">Status</th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5" /> Assigned Date
-                </span>
-              </th>
-              <th className="p-4 py-3">Attempts</th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5" /> Notes
-                </span>
-              </th>
-              <th className="p-4 py-3 text-center w-12">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && filteredContacts.map((contact, idx) => (
+      {!loading && filteredContacts.length > 0 && (
+        <div className="company-table-scroll w-full overflow-x-auto overscroll-x-contain rounded-xl ring-1 ring-gray-200/50 [-webkit-overflow-scrolling:touch]">
+          <table className="w-full text-left border-collapse min-w-[960px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-[#fafafa] text-[11px] font-bold text-gray-400">
+                <th className="p-4 w-10">
+                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5" /> Contact Name
+                  </span>
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5" /> Phone Number
+                  </span>
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5" /> Company
+                  </span>
+                </th>
+                <th className="p-4 py-3">Status</th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5" /> Assigned Date
+                  </span>
+                </th>
+                <th className="p-4 py-3">Attempts</th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Notes
+                  </span>
+                </th>
+                <th className="p-4 py-3 text-center w-12">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContacts.map((contact, idx) => (
               <tr
                 key={contact.id}
                 role="button"
@@ -359,10 +360,11 @@ export default function AgentContactManagement() {
                   )}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {loading && (
         <div className="text-center py-12 text-sm font-semibold text-gray-500">
@@ -371,17 +373,19 @@ export default function AgentContactManagement() {
       )}
 
       {!loading && filteredContacts.length === 0 && (
-        <p className="text-center py-12 text-sm font-semibold text-gray-500">
-          No contacts assigned to your account yet.
-        </p>
+        <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-gray-200/70 bg-white px-4 text-center">
+          <p className="text-sm font-semibold text-gray-500">
+            No contacts assigned to your account yet.
+          </p>
+        </div>
       )}
 
-      {!loading && (
+      {!loading && filteredContacts.length > 0 && (
         <PaginationFooter
           page={page}
           pageSize={pageSize}
-          totalItems={pagination.totalItems}
-          totalPages={pagination.totalPages}
+          totalItems={statusFilter === 'all' ? pagination.totalItems : filteredContacts.length}
+          totalPages={statusFilter === 'all' ? pagination.totalPages : 1}
           itemLabel="contacts"
           onPageChange={setPage}
         />

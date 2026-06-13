@@ -503,9 +503,9 @@ const Contacts = () => {
   const activePagination = paginationByTab[currentTab] || { page: 1, totalPages: 1 };
 
   return (
-    <div className="w-full bg-white rounded-[24px] shadow-sm ring-1 ring-gray-100 min-h-full p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
+    <div className="w-full bg-white rounded-[20px] shadow-sm ring-1 ring-gray-100 min-h-full p-4 sm:p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
       
-      <h1 className="text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight mb-8 mt-2">
+      <h1 className="text-[28px] leading-tight sm:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight mb-6 sm:mb-8 mt-1 sm:mt-2">
         Contact Management
       </h1>
 
@@ -516,7 +516,7 @@ const Contacts = () => {
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           
           {/* Tabs */}
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-2 xl:pb-0 xl:border-b-0">
+          <div className="grid w-full grid-cols-3 gap-2 border-b border-gray-100 pb-3 sm:flex sm:w-auto sm:items-center sm:pb-2 xl:pb-0 xl:border-b-0">
             {tabs.map(tab => (
               <Link 
                 key={tab.id}
@@ -524,7 +524,7 @@ const Contacts = () => {
                   pathname: `/contacts/${tab.id}`,
                   search: searchParams.toString() ? `?${searchParams.toString()}` : '',
                 }}
-                className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all ${
+                className={`flex min-h-[54px] items-center justify-center rounded-xl px-2 py-2 text-center text-[12px] font-bold leading-snug transition-all sm:min-h-0 sm:px-4 sm:text-[13px] ${
                   currentTab === tab.id 
                   ? 'bg-[#8bed21] text-gray-900 shadow-sm' 
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
@@ -536,7 +536,7 @@ const Contacts = () => {
           </div>
 
           {selectedContacts.length > 0 ? (
-            <div className="flex items-center gap-6 animate-in slide-in-from-right-2 duration-300">
+            <div className="flex flex-col gap-3 animate-in slide-in-from-right-2 duration-300 sm:flex-row sm:items-center sm:gap-6">
               <span className="px-3 py-1.5 bg-gray-100 rounded-lg text-[13px] font-bold text-gray-800 border border-gray-200 shadow-sm">
                 {selectedContacts.length} selected
               </span>
@@ -580,15 +580,15 @@ const Contacts = () => {
               </button>
             </div>
           ) : (
-            <div className="flex flex-wrap items-center gap-3 animate-in fade-in duration-300">
+            <div className="flex w-full flex-col gap-3 animate-in fade-in duration-300 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto xl:justify-end">
               {currentTab === 'log' ? (
                 <>
-                  <div className="relative">
+                  <div className="relative w-full sm:w-auto">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="text" value={qRaw} onChange={(e) => setListQuery(e.target.value)} placeholder="Search contact" className="w-[180px] sm:w-[240px] bg-[#f8f9fb] border border-gray-200 py-2 pl-10 pr-4 rounded-xl text-[13px] font-semibold text-gray-900 focus:ring-2 focus:ring-[#7ae230]" />
+                    <input type="text" value={qRaw} onChange={(e) => setListQuery(e.target.value)} placeholder="Search contact" className="w-full sm:w-[240px] bg-[#f8f9fb] border border-gray-200 py-2.5 pl-10 pr-4 rounded-xl text-[13px] font-semibold text-gray-900 focus:ring-2 focus:ring-[#7ae230]" />
                   </div>
-                  <div className="relative">
-                    <button onClick={() => setOpenFilter(openFilter === 'month' ? null : 'month')} className="flex items-center justify-between gap-3 px-4 py-2 bg-[#f8f9fb] border border-gray-200 shadow-sm rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors min-w-[120px]">
+                  <div className="relative w-full sm:w-auto">
+                    <button onClick={() => setOpenFilter(openFilter === 'month' ? null : 'month')} className="flex w-full items-center justify-between gap-3 px-4 py-2.5 bg-[#f8f9fb] border border-gray-200 shadow-sm rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors sm:min-w-[120px]">
                       This Month
                       <ChevronDown className="w-4 h-4 text-gray-400" />
                     </button>
@@ -605,13 +605,13 @@ const Contacts = () => {
                 </>
               ) : (
                 <>
-                  <div className="relative">
+                  <div className="relative w-full sm:w-auto">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="text" value={qRaw} onChange={(e) => setListQuery(e.target.value)} placeholder="Search contact" className="w-full sm:w-[240px] bg-[#f8f9fb] border border-gray-200 py-2 pl-10 pr-4 rounded-xl text-[13px] font-semibold text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-[#7ae230] transition-shadow" />
+                    <input type="text" value={qRaw} onChange={(e) => setListQuery(e.target.value)} placeholder="Search contact" className="w-full sm:w-[240px] bg-[#f8f9fb] border border-gray-200 py-2.5 pl-10 pr-4 rounded-xl text-[13px] font-semibold text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-[#7ae230] transition-shadow" />
                   </div>
 
-                  <div className="relative">
-                    <button onClick={() => setShowImportMenu(!showImportMenu)} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                  <div className="relative w-full sm:w-auto">
+                    <button onClick={() => setShowImportMenu(!showImportMenu)} className="flex w-full items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 shadow-sm rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors sm:w-auto">
                        <Download className="w-4 h-4 text-gray-500" /> Import contact list
                     </button>
                     {showImportMenu && (
@@ -644,7 +644,7 @@ const Contacts = () => {
 
                   <button 
               onClick={() => setShowAddContact(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8bed21] to-[#5AD43D] text-gray-900 shadow-sm rounded-xl text-[13px] font-bold hover:opacity-90 transition-all active:scale-[0.98] w-max whitespace-nowrap"
+              className="flex w-full items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8bed21] to-[#5AD43D] text-gray-900 shadow-sm rounded-xl text-[13px] font-bold hover:opacity-90 transition-all active:scale-[0.98] whitespace-nowrap sm:w-auto"
             >
               <Plus className="w-4 h-4" strokeWidth={3} />
               Add New Contact
@@ -657,10 +657,10 @@ const Contacts = () => {
 
         {/* Row 2: Call Log Special Filters (Shown on next line) */}
         {currentTab === 'log' && selectedContacts.length === 0 && (
-          <div className="flex items-center gap-4 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 gap-3 animate-in fade-in duration-300 sm:grid-cols-2 lg:flex lg:items-center lg:gap-4">
             {/* Company Filter Dropdown */}
             <div className="relative">
-              <button onClick={() => setOpenFilter(openFilter === 'company' ? null : 'company')} className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors min-w-[140px] justify-between">
+              <button onClick={() => setOpenFilter(openFilter === 'company' ? null : 'company')} className="flex w-full items-center gap-2 px-3 py-2.5 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors justify-between lg:min-w-[140px]">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#0B1221] flex items-center justify-center text-[10px] text-white font-black shadow-sm tracking-tighter">C</span>
                   Company
@@ -680,7 +680,7 @@ const Contacts = () => {
 
             {/* Assigned Agent Filter Dropdown */}
             <div className="relative">
-              <button onClick={() => setOpenFilter(openFilter === 'agent' ? null : 'agent')} className="flex items-center justify-between gap-4 px-4 py-2 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors min-w-[160px]">
+              <button onClick={() => setOpenFilter(openFilter === 'agent' ? null : 'agent')} className="flex w-full items-center justify-between gap-4 px-4 py-2.5 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors lg:min-w-[160px]">
                 Assigned Agent
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
@@ -697,7 +697,7 @@ const Contacts = () => {
 
             {/* Call Outcome Filter Dropdown */}
             <div className="relative">
-              <button onClick={() => setOpenFilter(openFilter === 'outcome' ? null : 'outcome')} className="flex items-center justify-between gap-4 px-4 py-2 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors min-w-[150px]">
+              <button onClick={() => setOpenFilter(openFilter === 'outcome' ? null : 'outcome')} className="flex w-full items-center justify-between gap-4 px-4 py-2.5 bg-[#f8f9fb] rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-100 transition-colors lg:min-w-[150px]">
                 Call Outcome
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
@@ -714,19 +714,6 @@ const Contacts = () => {
           </div>
         )}
       </div>
-      <PaginationFooter
-        page={activePagination.page || currentPage}
-        pageSize={activePagination.pageSize || 10}
-        totalItems={activePagination.totalItems || 0}
-        totalPages={activePagination.totalPages || 1}
-        itemLabel={currentTab === 'log' ? 'logs' : 'contacts'}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setCurrentPage(1);
-        }}
-      />
-
       {loadError && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">
           {loadError}
@@ -746,11 +733,11 @@ const Contacts = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 w-full overflow-x-auto rounded-xl ring-1 ring-gray-200/50">
+      <div className="company-table-scroll flex-1 w-full overflow-x-auto rounded-xl ring-1 ring-gray-200/50 [-webkit-overflow-scrolling:touch]">
         
         {/* Unassigned Contacts */}
         {currentTab === 'unassigned' && (
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+          <table className="min-w-[860px] w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 text-[12px] font-bold text-gray-400">
                 <th className="font-medium p-4 py-3">
@@ -842,7 +829,7 @@ const Contacts = () => {
 
         {/* Assigned Contacts */}
         {currentTab === 'assigned' && (
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+          <table className="min-w-[1180px] w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400">
                 <th className="font-medium p-4 py-3">
@@ -922,7 +909,7 @@ const Contacts = () => {
 
         {/* Call Log Component */}
         {currentTab === 'log' && (
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+          <table className="min-w-[1280px] w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400">
                 <th className="font-medium p-4 py-3">
@@ -1025,6 +1012,19 @@ const Contacts = () => {
         )}
 
       </div>
+
+      <PaginationFooter
+        page={activePagination.page || currentPage}
+        pageSize={activePagination.pageSize || 10}
+        totalItems={activePagination.totalItems || 0}
+        totalPages={activePagination.totalPages || 1}
+        itemLabel={currentTab === 'log' ? 'logs' : 'contacts'}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* Add New Contact Modal */}
       {showAddContact && (
