@@ -66,7 +66,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const Reports = () => {
   return (
-    <div className="w-full bg-[#f4f5f7] min-h-full sm:px-4 py-4 flex flex-col animate-in fade-in duration-500" style={{ gap: '16px' }}>
+    <div className="w-full bg-[#f4f5f7] min-h-full py-4 flex flex-col animate-in fade-in duration-500" style={{ gap: '16px' }}>
       
       {/* Header & Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

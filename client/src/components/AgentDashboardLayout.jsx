@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessageCount';
 import { useNotifications } from '../hooks/useNotifications';
 import {
@@ -11,26 +11,40 @@ import {
   PieChart,
   CreditCard,
   Settings,
-  Search,
   PanelLeft,
   LayoutGrid,
   LogOut,
+  ChevronDown,
 } from 'lucide-react';
 import InboxPanel from './InboxPanel';
 import { useAuth } from '../context/AuthContext';
 
+const getSidebarBrandName = (name) => {
+  const words = String(name || 'RemXCall')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return words[0] || 'RemXCall';
+};
+
+const getUserDisplayName = (user) => {
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
+  return fullName || user?.username || user?.email || 'Agent';
+};
+
 const AgentLogo = ({ user, whiteLabelEnabled }) => (
-  <div className="flex items-center gap-3">
+  <div className="flex min-w-0 items-center gap-3">
     <img
       src={whiteLabelEnabled && user?.company?.whiteLabelLogoUrl ? user.company.whiteLabelLogoUrl : '/dashboard-logo.svg'}
       alt={user?.company?.name || 'RemXCall'}
       className="h-9 w-9 shrink-0 rounded-md object-cover"
     />
     <span
-      className="font-display font-[900] text-[22px] tracking-[-0.03em] text-white"
+      className="block min-w-0 max-w-[170px] truncate font-display text-[22px] font-[900] tracking-normal text-white"
       style={whiteLabelEnabled && user?.company?.brandFont ? { fontFamily: user.company.brandFont } : undefined}
+      title={user?.company?.name || 'RemXCall'}
     >
-      {user?.company?.name || 'RemXCall'}
+      {getSidebarBrandName(user?.company?.name)}
     </span>
   </div>
 );
@@ -53,23 +67,11 @@ const itemClass = (isActive) =>
 export default function AgentDashboardLayout() {
   const unreadMessages = useUnreadMessageCount();
   const { unreadCount } = useNotifications();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const headerSearchQ = searchParams.get('q') ?? '';
-  const setHeaderSearch = (value) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        const v = String(value ?? '');
-        if (v.trim()) next.set('q', v);
-        else next.delete('q');
-        return next;
-      },
-      { replace: true }
-    );
-  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const profileMenuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -110,8 +112,18 @@ export default function AgentDashboardLayout() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!isProfileMenuOpen) return undefined;
+    const onPointerDown = (event) => {
+      if (profileMenuRef.current?.contains(event.target)) return;
+      setIsProfileMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isProfileMenuOpen]);
+
   return (
-    <div className="relative flex h-screen min-h-0 w-full overflow-hidden bg-[#f4f4f4] font-sans">
+    <div className="relative flex h-screen min-h-0 w-full overflow-hidden bg-[#f4f5f7] font-sans">
       {isSidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[55]"
@@ -132,7 +144,7 @@ export default function AgentDashboardLayout() {
       `}
         style={sidebarStyle}
       >
-        <div className="px-2 mb-10 whitespace-nowrap">
+        <div className="mb-10 min-w-0 overflow-hidden px-2">
           <AgentLogo user={user} whiteLabelEnabled={whiteLabelEnabled} />
         </div>
 
@@ -150,9 +162,9 @@ export default function AgentDashboardLayout() {
                       : 'text-gray-400 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <link.icon className="w-4 h-4 shrink-0" />
-                    <span>{link.name}</span>
+                    <span className="truncate">{link.name}</span>
                   </div>
                   {unreadCount > 0 && (
                     <span
@@ -210,29 +222,67 @@ export default function AgentDashboardLayout() {
           })}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-white/10">
-          <NavLink
-            to="/agent/settings"
-            className={({ isActive }) => itemClass(isActive)}
-            onClick={closeSidebarIfMobile}
-          >
-            <div className="flex items-center gap-3">
-              <Settings className="w-4 h-4 shrink-0" />
-              <span>Settings</span>
+        <div ref={profileMenuRef} className="mt-auto border-t border-white/10 pt-4">
+          {isProfileMenuOpen && (
+            <div className="mb-3 overflow-hidden rounded-xl bg-white text-gray-900 shadow-xl shadow-black/25 ring-1 ring-black/10">
+              <div className="border-b border-gray-100 px-4 py-3">
+                <p className="truncate text-[14px] font-bold leading-tight">{getUserDisplayName(user)}</p>
+                <p className="truncate text-[12px] font-medium text-gray-500">{user?.email || 'No email'}</p>
+              </div>
+              <NavLink
+                to="/agent/settings"
+                className="flex w-full items-center gap-3 px-4 py-3 text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  closeSidebarIfMobile();
+                }}
+              >
+                <Settings className="h-4 w-4 shrink-0 text-gray-500" />
+                <span className="truncate">Settings</span>
+              </NavLink>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span className="truncate">{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
+              </button>
             </div>
-          </NavLink>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsProfileMenuOpen((open) => !open)}
+            className="flex w-full min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-left text-white transition hover:bg-white/10"
+            aria-expanded={isProfileMenuOpen}
+          >
+            <img
+              src={headerAvatarSrc}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-full border border-white/20 bg-white/20 object-cover"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[14px] font-bold leading-tight">{getUserDisplayName(user)}</p>
+              <p className="truncate text-[12px] font-medium text-white/60">{user?.email || 'No email'}</p>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
         </div>
       </aside>
 
-      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#f4f4f4]">
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#f4f5f7]">
         <InboxPanel isOpen={isNotificationsOpen} />
 
-        <header className="h-[72px] shrink-0 flex items-center justify-between px-4 lg:px-8 bg-[#f4f4f4]">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-[76px] shrink-0 flex items-center justify-between px-4 lg:px-8 bg-[#f4f5f7] border-b border-gray-200/50 lg:border-none">
+          <div className="flex items-center gap-4 min-w-0">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-gray-500 hover:text-gray-900 p-1.5 rounded-lg transition-colors shrink-0"
+              className="text-gray-500 hover:text-gray-900 p-1 rounded-md transition-colors shrink-0"
               aria-label="Toggle sidebar"
             >
               <PanelLeft className="w-5 h-5" />
@@ -241,50 +291,15 @@ export default function AgentDashboardLayout() {
               <LayoutGrid className="w-4 h-4 shrink-0 text-gray-400" />
               {breadcrumb.map((part, i) => (
                 <span key={part} className="flex items-center gap-2 min-w-0">
-                  {i > 0 && <span className="text-gray-300">/</span>}
+                  {i > 0 && <span className="h-4 w-px shrink-0 bg-gray-300" aria-hidden />}
                   <span className={i === breadcrumb.length - 1 ? 'text-gray-900 truncate' : 'truncate'}>{part}</span>
                 </span>
               ))}
             </div>
           </div>
-
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="hidden md:block relative w-[220px] lg:w-[260px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <input
-                type="search"
-                value={headerSearchQ}
-                onChange={(e) => setHeaderSearch(e.target.value)}
-                placeholder="Search"
-                autoComplete="off"
-                className="w-full bg-white border border-gray-200/80 py-2.5 pl-10 pr-4 rounded-full text-sm font-medium shadow-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/50"
-              />
-            </div>
-            <button
-              type="button"
-              className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-gray-200 shadow-md ring-1 ring-gray-200"
-              aria-label="Profile"
-            >
-              <img
-                src={headerAvatarSrc}
-                alt=""
-                className="h-full w-full object-cover"
-                key={user?.profileImageUrl || user?.id || 'avatar'}
-              />
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="hidden sm:inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-60"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              {isLoggingOut ? '…' : 'Logout'}
-            </button>
-          </div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pb-12 pt-1 [-webkit-overflow-scrolling:touch] lg:px-8">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-12 pt-2 [-webkit-overflow-scrolling:touch] lg:px-8 scrollbar-hide">
           <Outlet />
         </div>
       </main>

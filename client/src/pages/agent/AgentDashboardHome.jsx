@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, User, Phone, Clock, Tag } from 'lucide-react';
+import { ChevronDown, User, Phone, Clock, Tag, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../../lib/api';
 
@@ -70,6 +70,7 @@ function FilterDropdown({ value, options, onChange, align = 'right' }) {
 export default function AgentDashboardHome() {
   const [callsPeriod, setCallsPeriod] = useState('Monthly');
   const [livePeriod, setLivePeriod] = useState('Weekly');
+  const [recentSearch, setRecentSearch] = useState('');
 
   const [stats, setStats] = useState({ totalCalls: 0, totalCallsChange: 0, followUps: 0, followUpsChange: 0 });
   const [recentCalls, setRecentCalls] = useState([]);
@@ -150,8 +151,14 @@ export default function AgentDashboardHome() {
     { title: 'Missed', val: loadingStats ? '—' : Math.round(stats.totalCalls * 0.15).toLocaleString(), accent: 'bg-[#ef4444]', up: false, change: Math.abs(stats.totalCallsChange) },
   ];
 
+  const filteredRecentCalls = useMemo(() => {
+    const q = recentSearch.trim().toLowerCase();
+    if (!q) return recentCalls;
+    return recentCalls.filter((call) => (call.contact?.fullName || '').toLowerCase().includes(q));
+  }, [recentCalls, recentSearch]);
+
   return (
-    <div className="w-full max-w-[1400px] mx-auto bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-8 flex flex-col gap-8 md:gap-10 animate-in fade-in duration-500">
+    <div className="flex min-h-0 flex-1 flex-col gap-8 md:gap-10 animate-in fade-in duration-500">
       <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">Dashboard</h1>
 
       {/* Calls */}
@@ -229,7 +236,20 @@ export default function AgentDashboardHome() {
       <section>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <h2 className="text-[18px] md:text-[20px] font-display font-[900] text-[#1a1a1a] tracking-tight">Recent Calls Activity</h2>
-          <FilterDropdown value={livePeriod} options={PERIODS} onChange={setLivePeriod} />
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-[260px]">
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                type="search"
+                value={recentSearch}
+                onChange={(e) => setRecentSearch(e.target.value)}
+                placeholder="Search contact by name"
+                autoComplete="off"
+                className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-[13px] font-semibold text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+              />
+            </div>
+            <FilterDropdown value={livePeriod} options={PERIODS} onChange={setLivePeriod} />
+          </div>
         </div>
         <div className="w-full overflow-x-auto rounded-xl ring-1 ring-gray-100 bg-white">
           <table className="w-full text-left border-collapse min-w-[560px]">
@@ -264,9 +284,13 @@ export default function AgentDashboardHome() {
             <tbody>
               {loadingRecent ? (
                 <tr><td colSpan={4} className="py-8 px-5 text-[13px] font-semibold text-gray-500">Loading...</td></tr>
-              ) : recentCalls.length === 0 ? (
-                <tr><td colSpan={4} className="py-8 px-5 text-[13px] font-semibold text-gray-500">No call activity yet.</td></tr>
-              ) : recentCalls.map((call) => (
+              ) : filteredRecentCalls.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 px-5 text-[13px] font-semibold text-gray-500">
+                    {recentSearch.trim() ? 'No calls match that contact name.' : 'No call activity yet.'}
+                  </td>
+                </tr>
+              ) : filteredRecentCalls.map((call) => (
                 <tr key={call.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
                   <td className="py-4 px-5 text-[13px] font-bold text-gray-900">{call.contact?.fullName || '—'}</td>
                   <td className="py-4 px-5 text-[13px] font-semibold text-gray-600 tabular-nums tracking-tight">{call.contact?.phone || '—'}</td>
