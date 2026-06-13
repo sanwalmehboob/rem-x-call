@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessageCount';
 import { useNotifications } from '../hooks/useNotifications';
 import {
   LayoutDashboard, MessageSquare, Inbox, Users, Building2, LogOut,
-  PieChart, CreditCard, Settings, Search, PanelLeft, ChevronRight, LayoutGrid, ChevronDown
+  PieChart, CreditCard, Settings, PanelLeft, ChevronRight, LayoutGrid, ChevronDown
 } from 'lucide-react';
 import InboxPanel from './InboxPanel';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,11 @@ const DashboardLogo = () => (
     <span className="font-display font-[900] text-[24px] tracking-[-0.03em] text-[#1a1a1a]">RemXCall</span>
   </div>
 );
+
+const getUserDisplayName = (user) => {
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
+  return fullName || user?.username || user?.email || 'Admin';
+};
 
 const navLinks = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -49,12 +54,12 @@ const navLinks = [
 const DashboardLayout = () => {
   const unreadMessages = useUnreadMessageCount();
   const { unreadCount } = useNotifications();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const headerSearchQ = searchParams.get('q') ?? '';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({ 'Contact Management': true });
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const profileMenuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -63,19 +68,6 @@ const DashboardLayout = () => {
     user?.profileImageUrl ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || user?.email || 'User')}&background=e5e7eb&color=374151&size=128`;
 
-  const setHeaderSearch = (value) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        const v = String(value ?? '');
-        if (v.trim()) next.set('q', v);
-        else next.delete('q');
-        return next;
-      },
-      { replace: true }
-    );
-  };
-  
   // Find current nav for header. Check subLinks if present.
   let currentNav = navLinks.find((link) => link.path && location.pathname.startsWith(link.path));
   if (!currentNav && location.pathname.startsWith('/settings')) {
@@ -107,6 +99,16 @@ const DashboardLayout = () => {
       setIsLoggingOut(false);
     }
   };
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) return undefined;
+    const onPointerDown = (event) => {
+      if (profileMenuRef.current?.contains(event.target)) return;
+      setIsProfileMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isProfileMenuOpen]);
 
   return (
     <div className="flex h-screen min-h-0 w-full bg-[#f4f5f7] font-['Inter',_system-ui,_sans-serif] overflow-hidden relative">
@@ -241,17 +243,53 @@ const DashboardLayout = () => {
           })}
         </nav>
 
-        <div className="mt-8 pt-4 border-t border-gray-200/50 whitespace-nowrap">
-          <NavLink 
-            to="/settings"
-            className={({ isActive }) => `
-              flex items-center gap-3 w-full px-3 py-2.5 text-[14px] font-semibold rounded-xl transition-all
-              ${isActive ? 'bg-[#1a1a1a] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100/80 hover:text-gray-900'}
-            `}
+        <div ref={profileMenuRef} className="mt-auto border-t border-gray-200/50 pt-4">
+          {isProfileMenuOpen && (
+            <div className="mb-3 overflow-hidden rounded-xl bg-white text-gray-900 shadow-xl shadow-black/10 ring-1 ring-black/10">
+              <div className="border-b border-gray-100 px-4 py-3">
+                <p className="truncate text-[14px] font-bold leading-tight">{getUserDisplayName(user)}</p>
+                <p className="truncate text-[12px] font-medium text-gray-500">{user?.email || 'No email'}</p>
+              </div>
+              <NavLink
+                to="/settings"
+                className="flex w-full items-center gap-3 px-4 py-3 text-[14px] font-semibold text-gray-700 transition hover:bg-gray-50"
+                onClick={() => setIsProfileMenuOpen(false)}
+              >
+                <Settings className="h-4 w-4 shrink-0 text-gray-500" />
+                <span className="truncate">Settings</span>
+              </NavLink>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-[14px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                <span className="truncate">{isLoggingOut ? 'Signing out...' : 'Sign out'}</span>
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsProfileMenuOpen((open) => !open)}
+            className="flex w-full min-w-0 items-center gap-3 rounded-xl bg-white px-3 py-3 text-left text-gray-900 shadow-sm ring-1 ring-gray-200/70 transition hover:bg-gray-50"
+            aria-expanded={isProfileMenuOpen}
           >
-            <Settings className="w-4 h-4" />
-            <span>Settings</span>
-          </NavLink>
+            <img
+              src={headerAvatarSrc}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-full border-2 border-white bg-gray-200 object-cover shadow-sm ring-1 ring-gray-200/80"
+              key={user?.profileImageUrl || user?.id || 'avatar-sidebar'}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[14px] font-bold leading-tight">{getUserDisplayName(user)}</p>
+              <p className="truncate text-[12px] font-medium text-gray-500">{user?.email || 'No email'}</p>
+            </div>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
         </div>
       </aside>
 
@@ -297,47 +335,6 @@ const DashboardLayout = () => {
             <h1 className="sm:hidden font-display font-[900] text-[18px] text-gray-900">
               {location.pathname.startsWith('/settings') ? 'Settings' : currentNav.name}
             </h1>
-          </div>
-          
-          <div className="flex items-center gap-3 sm:gap-5">
-            <div className="hidden md:block relative w-[240px] lg:w-[280px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <input 
-                type="search" 
-                value={headerSearchQ}
-                onChange={(e) => setHeaderSearch(e.target.value)}
-                placeholder="Search" 
-                autoComplete="off"
-                className="w-full bg-white border border-gray-200 py-2.5 pl-10 pr-4 rounded-full text-sm font-medium focus:ring-2 focus:ring-[#7ae230] shadow-sm text-gray-900 placeholder:text-gray-400"
-              />
-            </div>
-            
-            <button className="md:hidden text-gray-500 p-2">
-               <Search className="w-5 h-5" />
-            </button>
-            
-            <button
-              type="button"
-              className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white bg-gray-200 shadow-sm ring-1 ring-gray-200/80"
-              aria-label="Profile"
-            >
-              <img
-                src={headerAvatarSrc}
-                alt=""
-                className="h-full w-full object-cover"
-                key={user?.profileImageUrl || user?.id || 'avatar'}
-              />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
-            </button>
           </div>
         </header>
 

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Plus, MoreVertical, Edit2, Trash2, Mail, Calendar, X, Search } from 'lucide-react';
 import { api } from '../lib/api';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import PaginationFooter from '../components/PaginationFooter';
 
 const Subscriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,8 +25,8 @@ const Subscriptions = () => {
 
   const [plans, setPlans] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
+  const [pageSize, setPageSize] = useState(5);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 5, totalItems: 0, totalPages: 1 });
   const [loadError, setLoadError] = useState('');
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -295,27 +296,18 @@ const Subscriptions = () => {
           </tbody>
         </table>
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          disabled={pagination.page <= 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span className="text-xs font-semibold text-gray-500">
-          Page {pagination.page} of {pagination.totalPages}
-        </span>
-        <button
-          type="button"
-          disabled={pagination.page >= pagination.totalPages}
-          onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      <PaginationFooter
+        page={pagination.page}
+        pageSize={pagination.pageSize || 10}
+        totalItems={pagination.totalItems || 0}
+        totalPages={pagination.totalPages || 1}
+        itemLabel="plans"
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
 
       {(showAddModal || editingSub) && (
         <div className="fixed inset-0 bg-[#000000]/30 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">

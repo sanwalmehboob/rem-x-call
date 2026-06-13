@@ -200,6 +200,10 @@ const createContact = async (payload) => {
     if (payload.followUpDate !== undefined) {
         createData.followUpDate = payload.followUpDate;
     }
+    if (payload.notes !== undefined) {
+        const notes = normalizeSearch(payload.notes);
+        createData.notes = notes ? notes.slice(0, 5000) : null;
+    }
 
     return Contact.create(createData);
 };
@@ -241,6 +245,10 @@ const updateContact = async (contactId, payload) => {
     }
     if (payload.followUpDate !== undefined) {
         contact.followUpDate = payload.followUpDate;
+    }
+    if (payload.notes !== undefined) {
+        const notes = normalizeSearch(payload.notes);
+        contact.notes = notes ? notes.slice(0, 5000) : null;
     }
 
     await contact.save();

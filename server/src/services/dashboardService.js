@@ -89,25 +89,41 @@ const getStats = async ({ period = '30d' } = {}) => {
 };
 
 /**
- * GET /dashboard/recent-calls?limit=5
+ * GET /dashboard/recent-calls?page=1&pageSize=5&search=john
  */
-const getRecentCalls = async ({ limit = 5, req } = {}) => {
-    const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 50);
+const getRecentCalls = async ({ limit = 5, page = 1, pageSize, search = '', req } = {}) => {
+    const safePage = Math.max(Number(page) || 1, 1);
+    const safePageSize = Math.min(Math.max(Number(pageSize) || Number(limit) || 5, 1), 50);
+    const offset = (safePage - 1) * safePageSize;
+    const q = String(search || '').trim();
 
-    const calls = await CallLog.findAll({
+    const contactInclude = {
+        model: Contact,
+        as: 'contact',
+        attributes: ['id', 'fullName', 'phone', 'companyName', 'avatarUrl'],
+        required: Boolean(q),
+    };
+
+    if (q) {
+        contactInclude.where = {
+            [Op.or]: [
+                { fullName: { [Op.like]: `%${q}%` } },
+                { phone: { [Op.like]: `%${q}%` } },
+                { companyName: { [Op.like]: `%${q}%` } },
+            ],
+        };
+    }
+
+    const { rows: calls, count } = await CallLog.findAndCountAll({
         include: [
-            {
-                model: Contact,
-                as: 'contact',
-                attributes: ['id', 'fullName', 'phone', 'companyName', 'avatarUrl'],
-                required: false,
-            },
+            contactInclude,
         ],
         order: [['startedAt', 'DESC']],
-        limit: safeLimit,
+        limit: safePageSize,
+        offset,
     });
 
-    return calls.map((call) => {
+    const data = calls.map((call) => {
         const c = call.contact;
         return {
             callId: call.id,
@@ -130,6 +146,16 @@ const getRecentCalls = async ({ limit = 5, req } = {}) => {
             } : null,
         };
     });
+
+    return {
+        data,
+        pagination: {
+            page: safePage,
+            pageSize: safePageSize,
+            totalItems: count,
+            totalPages: Math.max(1, Math.ceil(count / safePageSize)),
+        },
+    };
 };
 
 /**

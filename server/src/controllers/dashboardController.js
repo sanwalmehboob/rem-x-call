@@ -7,11 +7,14 @@ const getStats = catchAsync(async (req, res) => {
 });
 
 const getRecentCalls = catchAsync(async (req, res) => {
-    const calls = await dashboardService.getRecentCalls({ 
+    const result = await dashboardService.getRecentCalls({ 
         limit: req.query.limit,
+        page: req.query.page,
+        pageSize: req.query.pageSize,
+        search: req.query.search,
         req,
     });
-    res.send({ data: calls, recentCalls: calls });
+    res.send({ data: result.data, recentCalls: result.data, pagination: result.pagination });
 });
 
 const getFollowUps = catchAsync(async (req, res) => {

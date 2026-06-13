@@ -1,80 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { connectSocket, disconnectSocket } from '../lib/socket';
+import PaginationFooter from '../components/PaginationFooter';
 
 /* ── tiny helpers ─────────────────────────────────────────────── */
-
-const Pagination = ({ meta, onPageChange }) => {
-  if (!meta || meta.totalPages <= 1) return null;
-
-  return (
-    <div className="flex items-center justify-between px-4 py-4 border-t border-gray-50 bg-white rounded-b-[16px]">
-      <div className="flex flex-1 justify-between sm:hidden">
-        <button
-          onClick={() => onPageChange(meta.currentPage - 1)}
-          disabled={meta.currentPage === 1}
-          className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => onPageChange(meta.currentPage + 1)}
-          disabled={meta.currentPage === meta.totalPages}
-          className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next
-        </button>
-      </div>
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-gray-700">
-            Showing <span className="font-semibold">{(meta.currentPage - 1) * meta.itemsPerPage + 1}</span> to{' '}
-            <span className="font-semibold">
-              {Math.min(meta.currentPage * meta.itemsPerPage, meta.totalItems)}
-            </span>{' '}
-            of <span className="font-semibold">{meta.totalItems}</span> results
-          </p>
-        </div>
-        <div>
-          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-            <button
-              onClick={() => onPageChange(meta.currentPage - 1)}
-              disabled={meta.currentPage === 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="sr-only">Previous</span>
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {[...Array(meta.totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => onPageChange(i + 1)}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                  meta.currentPage === i + 1
-                    ? 'z-10 bg-[#ADF808] text-gray-900 focus-visible:outline-[#ADF808]'
-                    : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => onPageChange(meta.currentPage + 1)}
-              disabled={meta.currentPage === meta.totalPages}
-              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="sr-only">Next</span>
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </nav>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const TrendBadge = ({ value, isUp }) => (
   <div className="flex flex-col items-start gap-0.5">
@@ -167,12 +99,17 @@ const Dashboard = () => {
     followUps: 0
   });
   const [recentCalls, setRecentCalls] = useState([]);
+  const [recentPage, setRecentPage] = useState(1);
+  const [recentPageSize, setRecentPageSize] = useState(5);
+  const [recentPagination, setRecentPagination] = useState({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
   const [agentPerformance, setAgentPerformance] = useState([]);
   const [agentPerformanceMeta, setAgentPerformanceMeta] = useState(null);
   const [perfPage, setPerfPage] = useState(1);
+  const [perfPageSize, setPerfPageSize] = useState(5);
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [liveCallSearch, setLiveCallSearch] = useState('');
 
   useEffect(() => {
     if (!token) return undefined;
@@ -217,17 +154,13 @@ const Dashboard = () => {
     (async () => {
       setLoading(true);
       try {
-        const [statsRes, recentRes] = await Promise.allSettled([
+        const [statsRes] = await Promise.allSettled([
           api.get('/dashboard/stats', { params: { period: '30d' } }),
-          api.get('/dashboard/recent-calls', { params: { limit: 10 } }),
         ]);
         if (cancelled) return;
         
         if (statsRes.status === 'fulfilled') {
           setStats(statsRes.value.data);
-        }
-        if (recentRes.status === 'fulfilled') {
-          setRecentCalls(recentRes.value.data.recentCalls || []);
         }
       } catch (err) {
         console.error('Dashboard primary stats fetch error:', err);
@@ -240,12 +173,37 @@ const Dashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/dashboard/recent-calls', {
+          params: {
+            page: recentPage,
+            pageSize: recentPageSize,
+            search: liveCallSearch.trim() || undefined,
+          },
+        });
+        if (cancelled) return;
+        setRecentCalls(res.data.recentCalls || []);
+        setRecentPagination(res.data.pagination || { page: recentPage, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+      } catch (err) {
+        if (!cancelled) {
+          setRecentCalls([]);
+          setRecentPagination({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+        }
+        console.error('Recent calls fetch error:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [recentPage, recentPageSize, liveCallSearch]);
+
   // Separate effect for paginated performance data
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get('/dashboard/agent-performance', { params: { page: perfPage, limit: 5 } });
+        const res = await api.get('/dashboard/agent-performance', { params: { page: perfPage, limit: perfPageSize } });
         if (cancelled) return;
         setAgentPerformance(res.data.agentPerformance || []);
         setAgentPerformanceMeta(res.data.meta);
@@ -254,7 +212,11 @@ const Dashboard = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [perfPage]);
+  }, [perfPage, perfPageSize]);
+
+  useEffect(() => {
+    setRecentPage(1);
+  }, [liveCallSearch]);
 
   const hasChartData = defaultChartData.some((d) => d.failed + d.busy + d.connected > 0);
 
@@ -467,11 +429,24 @@ const Dashboard = () => {
       >
         {/* Live Calls Activity */}
         <section className="bg-white rounded-[16px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
               Live Calls Activity
             </h2>
-            <WeeklyDropdown />
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-[260px]">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="search"
+                  value={liveCallSearch}
+                  onChange={(e) => setLiveCallSearch(e.target.value)}
+                  placeholder="Search calls"
+                  autoComplete="off"
+                  className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-[13px] font-semibold text-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#7ae230]/40"
+                />
+              </div>
+              <WeeklyDropdown />
+            </div>
           </div>
           <div className="w-full overflow-x-auto scrollbar-hide">
             <table className="w-full text-left border-collapse min-w-[600px]">
@@ -506,7 +481,7 @@ const Dashboard = () => {
                       colSpan={4}
                       className="py-20 text-center text-[14px] font-medium text-gray-400"
                     >
-                      No Live call activities yet to found
+                      {liveCallSearch.trim() ? 'No live calls match your search.' : 'No Live call activities yet to found'}
                     </td>
                   </tr>
                 ) : (
@@ -534,6 +509,18 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
+          <PaginationFooter
+            page={recentPage}
+            pageSize={recentPageSize}
+            totalItems={recentPagination.totalItems}
+            totalPages={recentPagination.totalPages}
+            itemLabel="calls"
+            onPageChange={setRecentPage}
+            onPageSizeChange={(size) => {
+              setRecentPageSize(size);
+              setRecentPage(1);
+            }}
+          />
         </section>
 
         {/* Agent Performance Overview */}
@@ -625,7 +612,22 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-          <Pagination meta={agentPerformanceMeta} onPageChange={setPerfPage} />
+          {agentPerformanceMeta && (
+            <div className="px-6 pb-6">
+              <PaginationFooter
+                page={agentPerformanceMeta.currentPage || perfPage}
+                pageSize={agentPerformanceMeta.itemsPerPage || 5}
+                totalItems={agentPerformanceMeta.totalItems || 0}
+                totalPages={agentPerformanceMeta.totalPages || 1}
+                itemLabel="agents"
+                onPageChange={setPerfPage}
+                onPageSizeChange={(size) => {
+                  setPerfPageSize(size);
+                  setPerfPage(1);
+                }}
+              />
+            </div>
+          )}
         </section>
       </div>
 
