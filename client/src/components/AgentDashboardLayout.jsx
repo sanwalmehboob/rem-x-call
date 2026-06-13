@@ -255,7 +255,7 @@ export default function AgentDashboardLayout() {
           <button
             type="button"
             onClick={() => setIsProfileMenuOpen((open) => !open)}
-            className="flex w-full min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-left text-white transition hover:bg-white/10"
+            className="flex w-full min-w-0 items-center gap-3 rounded-xl bg-white/5 px-3 py-3 text-left text-white ring-1 ring-white/10 transition hover:bg-white/10"
             aria-expanded={isProfileMenuOpen}
           >
             <img

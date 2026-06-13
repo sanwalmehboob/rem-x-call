@@ -273,7 +273,7 @@ const DashboardLayout = () => {
           <button
             type="button"
             onClick={() => setIsProfileMenuOpen((open) => !open)}
-            className="flex w-full min-w-0 items-center gap-3 rounded-xl px-2 py-2 text-left text-gray-900 transition hover:bg-gray-100/80"
+            className="flex w-full min-w-0 items-center gap-3 rounded-xl bg-white px-3 py-3 text-left text-gray-900 shadow-sm ring-1 ring-gray-200/70 transition hover:bg-gray-50"
             aria-expanded={isProfileMenuOpen}
           >
             <img
