@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { countries } from 'countries-list';
+import PaginationFooter from '../components/PaginationFooter';
 
 const EMPTY_NEW_CONTACT_FORM = {
   fullName: '',
@@ -125,12 +126,12 @@ const Contacts = () => {
   const [callLogs, setCallLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationByTab, setPaginationByTab] = useState({
-    unassigned: { page: 1, pageSize: 10, totalItems: 0, totalPages: 1 },
-    assigned: { page: 1, pageSize: 10, totalItems: 0, totalPages: 1 },
-    log: { page: 1, pageSize: 10, totalItems: 0, totalPages: 1 },
+    unassigned: { page: 1, pageSize: 5, totalItems: 0, totalPages: 1 },
+    assigned: { page: 1, pageSize: 5, totalItems: 0, totalPages: 1 },
+    log: { page: 1, pageSize: 5, totalItems: 0, totalPages: 1 },
   });
   const [newContactForm, setNewContactForm] = useState(EMPTY_NEW_CONTACT_FORM);
   const [newContactErrors, setNewContactErrors] = useState({});
@@ -235,7 +236,7 @@ const Contacts = () => {
     return () => {
       cancelled = true;
     };
-  }, [currentTab, navigate, currentPage, debouncedSearch]);
+  }, [currentTab, navigate, currentPage, pageSize, debouncedSearch]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -713,27 +714,18 @@ const Contacts = () => {
           </div>
         )}
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          disabled={activePagination.page <= 1}
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span className="text-xs font-semibold text-gray-500">
-          Page {activePagination.page} of {activePagination.totalPages}
-        </span>
-        <button
-          type="button"
-          disabled={activePagination.page >= activePagination.totalPages}
-          onClick={() => setCurrentPage((p) => Math.min(activePagination.totalPages, p + 1))}
-          className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      <PaginationFooter
+        page={activePagination.page || currentPage}
+        pageSize={activePagination.pageSize || 10}
+        totalItems={activePagination.totalItems || 0}
+        totalPages={activePagination.totalPages || 1}
+        itemLabel={currentTab === 'log' ? 'logs' : 'contacts'}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
       {loadError && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">

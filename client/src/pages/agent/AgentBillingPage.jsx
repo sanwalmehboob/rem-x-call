@@ -1,18 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, ChevronDown, Calendar, Tag, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../../lib/api';
+import PaginationFooter from '../../components/PaginationFooter';
 
 export default function AgentBillingPage() {
   const [search, setSearch] = useState('');
   const [cycleFilter, setCycleFilter] = useState('All cycles');
   const [open, setOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [subscription, setSubscription] = useState(null);
   const [loadingSub, setLoadingSub] = useState(true);
   const [subError, setSubError] = useState('');
 
   const [history, setHistory] = useState([]);
+  const [historyPagination, setHistoryPagination] = useState({ page: 1, pageSize: 5, totalItems: 0, totalPages: 1 });
   const [loadingHist, setLoadingHist] = useState(true);
+  const pageSize = 5;
 
   // Fetch current subscription
   useEffect(() => {
@@ -45,16 +49,30 @@ export default function AgentBillingPage() {
     setLoadingHist(true);
     (async () => {
       try {
-        const { data } = await api.get('/subscriptions/history', { params: { page: 1, pageSize: 100 } });
-        if (!cancelled) setHistory(data?.data || []);
+        const { data } = await api.get('/subscriptions/history', {
+          params: {
+            page: currentPage,
+            pageSize,
+            search: search.trim() || undefined,
+            cycle: cycleFilter === 'All cycles' ? undefined : cycleFilter.toLowerCase(),
+          },
+        });
+        if (!cancelled) {
+          setHistory(data?.data || []);
+          setHistoryPagination(data?.pagination || { page: currentPage, pageSize, totalItems: 0, totalPages: 1 });
+        }
       } catch (err) {
         console.error('Failed to load billing history:', err);
+        if (!cancelled) {
+          setHistory([]);
+          setHistoryPagination({ page: 1, pageSize, totalItems: 0, totalPages: 1 });
+        }
       } finally {
         if (!cancelled) setLoadingHist(false);
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [currentPage, search, cycleFilter]);
 
   const isActive = subscription?.status === 'active';
   const planName = subscription?.planName || 'No Plan';
@@ -76,16 +94,9 @@ export default function AgentBillingPage() {
     }));
   }, [history]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return BILLING_ROWS.filter((r) => {
-      const matchesSearch = !q || `${r.paidDate} ${r.price} ${r.status} ${r.cycleEnd}`.toLowerCase().includes(q);
-      const matchesCycle = cycleFilter === 'All cycles' || 
-                           (cycleFilter === 'Monthly' && r.billingCycle.toLowerCase() === 'monthly') ||
-                           (cycleFilter === 'Yearly' && r.billingCycle.toLowerCase() === 'yearly');
-      return matchesSearch && matchesCycle;
-    });
-  }, [search, cycleFilter, BILLING_ROWS]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, cycleFilter]);
 
   return (
     <div className="w-full flex flex-col gap-8 animate-in fade-in duration-500">
@@ -249,13 +260,13 @@ export default function AgentBillingPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {BILLING_ROWS.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-sm text-gray-500 font-semibold">
                     No billing history available yet.
                   </td>
                 </tr>
-              ) : filtered.map((row) => (
+              ) : BILLING_ROWS.map((row) => (
                 <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50/60">
                   <td className="p-4 pl-6 text-[13px] font-semibold text-gray-800">{row.paidDate}</td>
                   <td className="p-4 text-[13px] font-bold text-gray-900">${row.price}</td>
@@ -271,6 +282,15 @@ export default function AgentBillingPage() {
             </tbody>
           </table>
         </div>
+
+        <PaginationFooter
+          page={currentPage}
+          pageSize={pageSize}
+          totalItems={historyPagination.totalItems}
+          totalPages={historyPagination.totalPages}
+          itemLabel="records"
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

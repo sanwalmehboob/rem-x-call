@@ -10,10 +10,12 @@ import {
   PhoneCall,
   Plus,
   Eye,
-  X,
   ChevronDown,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import ContactDetailModal from '../../components/modals/ContactDetailModal';
+import QuickNoteModal from '../../components/modals/QuickNoteModal';
+import PaginationFooter from '../../components/PaginationFooter';
 
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All statuses' },
@@ -71,13 +73,16 @@ export default function AgentContactManagement() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [menuId, setMenuId] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [noteModal, setNoteModal] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -126,6 +131,30 @@ export default function AgentContactManagement() {
       setError(err?.response?.data?.message || 'Failed to initiate VoIP call.');
       setSuccess('');
     }
+  };
+
+  const handleSaveNote = async () => {
+    if (!noteModal) return;
+    setSavingNote(true);
+    setError('');
+    try {
+      const { data } = await api.patch(`/contacts/${noteModal.id}`, { notes: noteText });
+      const updated = data?.contact || { ...noteModal, notes: noteText };
+      setContacts((prev) => prev.map((contact) => (contact.id === noteModal.id ? { ...contact, notes: updated.notes } : contact)));
+      setNoteModal(null);
+      setNoteText('');
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save note.');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const openNoteModal = (contact) => {
+    setNoteModal(contact);
+    setNoteText(contact.notes || '');
+    setSelectedContact(null);
+    setMenuId(null);
   };
 
   useEffect(() => {
@@ -207,6 +236,12 @@ export default function AgentContactManagement() {
         </div>
       )}
 
+      {success && (
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+          {success}
+        </div>
+      )}
+
       <div className="flex-1 w-full overflow-x-auto rounded-xl ring-1 ring-gray-200/50 -mx-1">
         <table className="w-full text-left border-collapse min-w-[960px]">
           <thead>
@@ -246,8 +281,20 @@ export default function AgentContactManagement() {
           </thead>
           <tbody>
             {!loading && filteredContacts.map((contact, idx) => (
-              <tr key={contact.id} className={`border-b border-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50/80`}>
-                <td className="p-4">
+              <tr
+                key={contact.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedContact(contact)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedContact(contact);
+                  }
+                }}
+                className={`cursor-pointer border-b border-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8bed21]/40`}
+              >
+                <td className="p-4" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
                 </td>
                 <td className="p-4 text-[13px] font-bold text-gray-800">{contact.fullName}</td>
@@ -265,8 +312,12 @@ export default function AgentContactManagement() {
                 <td className="p-4">{statusPill(contact.status)}</td>
                 <td className="p-4 text-[13px] font-semibold text-gray-600 whitespace-nowrap">{formatDate(contact.createdAt)}</td>
                 <td className="p-4 text-[13px] font-bold text-gray-800 tabular-nums">1</td>
-                <td className="p-4 text-[13px] font-semibold text-gray-600">Assigned</td>
-                <td className="p-4 text-center relative">
+                <td className="p-4 text-[13px] font-semibold text-gray-600">
+                  <span title={contact.notes || ''} className={contact.notes ? 'line-clamp-2 block max-w-[220px]' : 'text-gray-400'}>
+                    {contact.notes || '-'}
+                  </span>
+                </td>
+                <td className="p-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={() => setMenuId(menuId === contact.id ? null : contact.id)}
@@ -278,7 +329,17 @@ export default function AgentContactManagement() {
                   {menuId === contact.id && (
                     <>
                       <button type="button" className="fixed inset-0 z-20" onClick={() => setMenuId(null)} aria-hidden="true" />
-                      <div className="absolute right-4 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 text-left">
+                      <div className="absolute right-4 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 text-left" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setSelectedContact(contact);
+                            setMenuId(null);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" /> View Details
+                        </button>
                         <button
                           type="button"
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
@@ -289,11 +350,7 @@ export default function AgentContactManagement() {
                         <button
                           type="button"
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
-                          onClick={() => {
-                            setNoteModal(contact);
-                            setNoteText('');
-                            setMenuId(null);
-                          }}
+                          onClick={() => openNoteModal(contact)}
                         >
                           <Plus className="w-4 h-4" /> Add Quick Note
                         </button>
@@ -319,67 +376,37 @@ export default function AgentContactManagement() {
         </p>
       )}
 
-      {/* Pagination controls */}
-      {!loading && pagination.totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-          <p className="text-[13px] font-semibold text-gray-500">
-            Showing {filteredContacts.length} of {pagination.totalItems} contacts
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50 transition-opacity"
-            >
-              Previous
-            </button>
-            <span className="text-[13px] font-bold text-gray-800 px-2">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-              className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50 transition-opacity"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+      {!loading && (
+        <PaginationFooter
+          page={page}
+          pageSize={pageSize}
+          totalItems={pagination.totalItems}
+          totalPages={pagination.totalPages}
+          itemLabel="contacts"
+          onPageChange={setPage}
+        />
       )}
 
-      {noteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95">
-            <button
-              type="button"
-              onClick={() => setNoteModal(null)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-900"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-[20px] font-bold text-gray-900 mb-1">Add Quick Note</h2>
-            <p className="text-[13px] font-medium text-gray-500 mb-6">Add a note related to this contact.</p>
-            <label className="block text-[13px] font-bold text-gray-900 mb-2">Note</label>
-            <textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Type your note.."
-              rows={5}
-              className="w-full bg-[#f8f9fb] border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40 resize-none"
-            />
-            <button
-              type="button"
-              onClick={() => setNoteModal(null)}
-              className="mt-6 w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8bed21] to-[#5AD43D] text-gray-900 text-[15px] font-bold shadow-sm hover:opacity-95 transition-opacity"
-            >
-              Add Note
-            </button>
-          </div>
-        </div>
-      )}
+      <ContactDetailModal
+        contact={selectedContact}
+        onClose={() => setSelectedContact(null)}
+        onCall={(contact) => {
+          setSelectedContact(null);
+          handleCallNow(contact);
+        }}
+        onEditNote={openNoteModal}
+        formatDate={formatDate}
+        renderStatus={statusPill}
+      />
+
+      <QuickNoteModal
+        open={Boolean(noteModal)}
+        noteText={noteText}
+        saving={savingNote}
+        onChange={setNoteText}
+        onClose={() => setNoteModal(null)}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }

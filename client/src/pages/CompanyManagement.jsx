@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { api } from '../lib/api';
 import { countries } from 'countries-list';
+import PaginationFooter from '../components/PaginationFooter';
 import { 
   Search, Plus, MoreVertical, UserX, Trash2, 
   ChevronLeft, Upload, Phone, Calendar, User, Landmark, CreditCard, Clock, ArrowUpRight, Check, ChevronDown, Eye, CircleX, PencilLine, Ban, KeyRound
@@ -522,8 +523,8 @@ export default function CompanyManagement() {
   const [actionMenu, setActionMenu] = useState(null);
   const [selectedCompanyIds, setSelectedCompanyIds] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, totalItems: 0, totalPages: 1 });
+  const [pageSize, setPageSize] = useState(5);
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 5, totalItems: 0, totalPages: 1 });
   const fileInputRef = useRef(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -1679,26 +1680,19 @@ export default function CompanyManagement() {
           </div>
         </div>
 
-        <div className="mt-3 flex shrink-0 items-center justify-end gap-2 pb-10">
-          <button
-            type="button"
-            disabled={pagination.page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <span className="text-xs font-semibold text-gray-500">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={pagination.page >= pagination.totalPages}
-            onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 disabled:opacity-50"
-          >
-            Next
-          </button>
+        <div className="pb-10">
+          <PaginationFooter
+            page={pagination.page}
+            pageSize={pagination.pageSize || 10}
+            totalItems={pagination.totalItems || 0}
+            totalPages={pagination.totalPages || 1}
+            itemLabel={currentTab === 'subscriptions' ? 'subscriptions' : 'companies'}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
         </div>
       </div>
 

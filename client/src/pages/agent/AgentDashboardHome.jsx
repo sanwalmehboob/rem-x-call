@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, User, Phone, Clock, Tag, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../../lib/api';
+import PaginationFooter from '../../components/PaginationFooter';
 
 const PERIOD_MAP = { Monthly: '90d', Weekly: '30d', Daily: '30d' };
 const PERIODS = ['Daily', 'Weekly', 'Monthly'];
@@ -71,9 +72,12 @@ export default function AgentDashboardHome() {
   const [callsPeriod, setCallsPeriod] = useState('Monthly');
   const [livePeriod, setLivePeriod] = useState('Weekly');
   const [recentSearch, setRecentSearch] = useState('');
+  const [recentPage, setRecentPage] = useState(1);
+  const recentPageSize = 5;
 
   const [stats, setStats] = useState({ totalCalls: 0, totalCallsChange: 0, followUps: 0, followUpsChange: 0 });
   const [recentCalls, setRecentCalls] = useState([]);
+  const [recentPagination, setRecentPagination] = useState({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
@@ -99,19 +103,30 @@ export default function AgentDashboardHome() {
   useEffect(() => {
     let cancelled = false;
     setLoadingRecent(true);
-    const limit = livePeriod === 'Daily' ? 7 : livePeriod === 'Weekly' ? 10 : 20;
     (async () => {
       try {
-        const { data } = await api.get('/dashboard/recent-calls', { params: { limit } });
-        if (!cancelled) setRecentCalls(data?.recentCalls || []);
+        const { data } = await api.get('/dashboard/recent-calls', {
+          params: {
+            page: recentPage,
+            pageSize: recentPageSize,
+            search: recentSearch.trim() || undefined,
+          },
+        });
+        if (!cancelled) {
+          setRecentCalls(data?.recentCalls || []);
+          setRecentPagination(data?.pagination || { page: recentPage, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+        }
       } catch {
-        if (!cancelled) setRecentCalls([]);
+        if (!cancelled) {
+          setRecentCalls([]);
+          setRecentPagination({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+        }
       } finally {
         if (!cancelled) setLoadingRecent(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [livePeriod]);
+  }, [recentPage, recentSearch]);
 
   // Build chart data from stats
   const chartData = useMemo(() => {
@@ -151,11 +166,9 @@ export default function AgentDashboardHome() {
     { title: 'Missed', val: loadingStats ? '—' : Math.round(stats.totalCalls * 0.15).toLocaleString(), accent: 'bg-[#ef4444]', up: false, change: Math.abs(stats.totalCallsChange) },
   ];
 
-  const filteredRecentCalls = useMemo(() => {
-    const q = recentSearch.trim().toLowerCase();
-    if (!q) return recentCalls;
-    return recentCalls.filter((call) => (call.contact?.fullName || '').toLowerCase().includes(q));
-  }, [recentCalls, recentSearch]);
+  useEffect(() => {
+    setRecentPage(1);
+  }, [recentSearch, livePeriod]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-8 md:gap-10 animate-in fade-in duration-500">
@@ -284,13 +297,13 @@ export default function AgentDashboardHome() {
             <tbody>
               {loadingRecent ? (
                 <tr><td colSpan={4} className="py-8 px-5 text-[13px] font-semibold text-gray-500">Loading...</td></tr>
-              ) : filteredRecentCalls.length === 0 ? (
+              ) : recentCalls.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 px-5 text-[13px] font-semibold text-gray-500">
                     {recentSearch.trim() ? 'No calls match that contact name.' : 'No call activity yet.'}
                   </td>
                 </tr>
-              ) : filteredRecentCalls.map((call) => (
+              ) : recentCalls.map((call) => (
                 <tr key={call.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
                   <td className="py-4 px-5 text-[13px] font-bold text-gray-900">{call.contact?.fullName || '—'}</td>
                   <td className="py-4 px-5 text-[13px] font-semibold text-gray-600 tabular-nums tracking-tight">{call.contact?.phone || '—'}</td>
@@ -306,6 +319,17 @@ export default function AgentDashboardHome() {
             </tbody>
           </table>
         </div>
+
+        {!loadingRecent && (
+          <PaginationFooter
+            page={recentPage}
+            pageSize={recentPageSize}
+            totalItems={recentPagination.totalItems}
+            totalPages={recentPagination.totalPages}
+            itemLabel="calls"
+            onPageChange={setRecentPage}
+          />
+        )}
       </section>
     </div>
   );
