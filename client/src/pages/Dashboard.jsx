@@ -1,80 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ChevronDown, Phone, Clock, Tag, User, Building2, PhoneCall, TrendingUp, TrendingDown, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { connectSocket, disconnectSocket } from '../lib/socket';
+import PaginationFooter from '../components/PaginationFooter';
 
 /* ── tiny helpers ─────────────────────────────────────────────── */
-
-const Pagination = ({ meta, onPageChange }) => {
-  if (!meta || meta.totalPages <= 1) return null;
-
-  return (
-    <div className="flex items-center justify-between px-4 py-4 border-t border-gray-50 bg-white rounded-b-[16px]">
-      <div className="flex flex-1 justify-between sm:hidden">
-        <button
-          onClick={() => onPageChange(meta.currentPage - 1)}
-          disabled={meta.currentPage === 1}
-          className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => onPageChange(meta.currentPage + 1)}
-          disabled={meta.currentPage === meta.totalPages}
-          className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next
-        </button>
-      </div>
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-gray-700">
-            Showing <span className="font-semibold">{(meta.currentPage - 1) * meta.itemsPerPage + 1}</span> to{' '}
-            <span className="font-semibold">
-              {Math.min(meta.currentPage * meta.itemsPerPage, meta.totalItems)}
-            </span>{' '}
-            of <span className="font-semibold">{meta.totalItems}</span> results
-          </p>
-        </div>
-        <div>
-          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-            <button
-              onClick={() => onPageChange(meta.currentPage - 1)}
-              disabled={meta.currentPage === 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="sr-only">Previous</span>
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </button>
-            {[...Array(meta.totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => onPageChange(i + 1)}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                  meta.currentPage === i + 1
-                    ? 'z-10 bg-[#ADF808] text-gray-900 focus-visible:outline-[#ADF808]'
-                    : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => onPageChange(meta.currentPage + 1)}
-              disabled={meta.currentPage === meta.totalPages}
-              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="sr-only">Next</span>
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </nav>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const TrendBadge = ({ value, isUp }) => (
   <div className="flex flex-col items-start gap-0.5">
@@ -167,9 +99,13 @@ const Dashboard = () => {
     followUps: 0
   });
   const [recentCalls, setRecentCalls] = useState([]);
+  const [recentPage, setRecentPage] = useState(1);
+  const [recentPageSize, setRecentPageSize] = useState(5);
+  const [recentPagination, setRecentPagination] = useState({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
   const [agentPerformance, setAgentPerformance] = useState([]);
   const [agentPerformanceMeta, setAgentPerformanceMeta] = useState(null);
   const [perfPage, setPerfPage] = useState(1);
+  const [perfPageSize, setPerfPageSize] = useState(5);
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -218,17 +154,13 @@ const Dashboard = () => {
     (async () => {
       setLoading(true);
       try {
-        const [statsRes, recentRes] = await Promise.allSettled([
+        const [statsRes] = await Promise.allSettled([
           api.get('/dashboard/stats', { params: { period: '30d' } }),
-          api.get('/dashboard/recent-calls', { params: { limit: 10 } }),
         ]);
         if (cancelled) return;
         
         if (statsRes.status === 'fulfilled') {
           setStats(statsRes.value.data);
-        }
-        if (recentRes.status === 'fulfilled') {
-          setRecentCalls(recentRes.value.data.recentCalls || []);
         }
       } catch (err) {
         console.error('Dashboard primary stats fetch error:', err);
@@ -241,12 +173,37 @@ const Dashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/dashboard/recent-calls', {
+          params: {
+            page: recentPage,
+            pageSize: recentPageSize,
+            search: liveCallSearch.trim() || undefined,
+          },
+        });
+        if (cancelled) return;
+        setRecentCalls(res.data.recentCalls || []);
+        setRecentPagination(res.data.pagination || { page: recentPage, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+      } catch (err) {
+        if (!cancelled) {
+          setRecentCalls([]);
+          setRecentPagination({ page: 1, pageSize: recentPageSize, totalItems: 0, totalPages: 1 });
+        }
+        console.error('Recent calls fetch error:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [recentPage, recentPageSize, liveCallSearch]);
+
   // Separate effect for paginated performance data
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await api.get('/dashboard/agent-performance', { params: { page: perfPage, limit: 5 } });
+        const res = await api.get('/dashboard/agent-performance', { params: { page: perfPage, limit: perfPageSize } });
         if (cancelled) return;
         setAgentPerformance(res.data.agentPerformance || []);
         setAgentPerformanceMeta(res.data.meta);
@@ -255,38 +212,26 @@ const Dashboard = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [perfPage]);
+  }, [perfPage, perfPageSize]);
+
+  useEffect(() => {
+    setRecentPage(1);
+  }, [liveCallSearch]);
 
   const hasChartData = defaultChartData.some((d) => d.failed + d.busy + d.connected > 0);
-  const filteredRecentCalls = useMemo(() => {
-    const q = liveCallSearch.trim().toLowerCase();
-    if (!q) return recentCalls;
-    return recentCalls.filter((call) =>
-      [
-        call.contact?.fullName,
-        call.contact?.phone,
-        call.status,
-        call.duration,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [recentCalls, liveCallSearch]);
 
   /* ── render ─────────────────────────────────────────────────── */
   return (
-    <div className="flex min-h-0 flex-1 flex-col space-y-8 animate-in fade-in duration-500">
+    <div className="flex min-h-0 flex-1 flex-col space-y-6 md:space-y-8 animate-in fade-in duration-500">
       {/* Page heading */}
-      <h1 className="text-[32px] font-display font-[900] text-gray-900 tracking-tight mb-2">
+      <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-gray-900 tracking-tight mb-1 md:mb-2">
         Dashboard
       </h1>
 
       {/* ───────────────────────── OVERVIEW (green section) ───────────────────────── */}
       <section
-        className="w-full rounded-[16px] pt-4 pr-2 pb-2 pl-2 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
-        style={{ height: '282px', background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
+        className="w-full rounded-[16px] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+        style={{ background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
       >
         {/* Section header row */}
         <div className="flex items-center justify-between mb-4 px-3">
@@ -297,16 +242,13 @@ const Dashboard = () => {
         </div>
 
         {/* 3-column stat cards */}
-        <div className="flex gap-2 flex-1 px-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {/* Agents Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Agents Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Agents</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -316,7 +258,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Agents</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.agents.active}
@@ -329,14 +271,11 @@ const Dashboard = () => {
           </div>
 
           {/* Subscriptions Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Subscriptions Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Subscriptions</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -346,7 +285,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Subscriptions</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.subscriptions.active}
@@ -359,14 +298,11 @@ const Dashboard = () => {
           </div>
 
           {/* Contacts Overview */}
-          <div 
-            className="bg-white rounded-[16px] flex flex-col justify-between"
-            style={{ width: '457px', height: '203px', padding: '21px 16px' }}
-          >
+          <div className="bg-white rounded-[16px] flex min-h-[190px] flex-col justify-between p-4 sm:p-5">
             <h3 className="text-gray-400 text-[11px] font-bold uppercase tracking-widest">
               Contacts Overview
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
               <div className="flex flex-col">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Total Contacts</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
@@ -376,7 +312,7 @@ const Dashboard = () => {
                   <TrendBadge value="0.0%" isUp />
                 </div>
               </div>
-              <div className="flex flex-col border-l border-gray-100 pl-4">
+              <div className="flex min-w-0 flex-col border-l border-gray-100 pl-3 sm:pl-4">
                 <p className="text-gray-400 text-[10px] font-bold mb-1">Active Contacts</p>
                 <span className="text-[34px] font-display font-[900] leading-none tracking-tight text-[#1a1a1a]">
                   {stats.contacts.active}
@@ -391,10 +327,7 @@ const Dashboard = () => {
       </section>
 
       {/* ────────────────────────── CALLS SECTION ──────────────────────────── */}
-      <section 
-        className="w-full bg-white rounded-[16px] pt-4 pr-2 pb-6 pl-2 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100"
-        style={{ height: '441px' }}
-      >
+      <section className="w-full bg-white rounded-[16px] p-4 sm:p-6 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100">
         <div className="flex items-center justify-between mb-8 px-4">
           <h2 className="text-[22px] font-display font-[900] tracking-tight text-[#1a1a1a]">
             Calls
@@ -402,9 +335,9 @@ const Dashboard = () => {
           <WeeklyDropdown />
         </div>
 
-        <div className="flex flex-1 gap-[34px] px-4">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.45fr)]">
           {/* Chart */}
-          <div className="flex-1 h-full relative">
+          <div className="relative min-h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={defaultChartData}
@@ -449,7 +382,7 @@ const Dashboard = () => {
           </div>
 
           {/* 2×2 stat cards */}
-          <div className="w-[45%] grid grid-cols-2 gap-4 h-full">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
               { title: 'Connected Calls', val: stats.totalCalls || '0', isUp: true, color: 'bg-[#ADF808]' },
               { title: 'No Answer', val: '0', isUp: true, color: 'bg-[#5AD43D]' },
@@ -458,11 +391,11 @@ const Dashboard = () => {
             ].map((stat, i) => (
               <div
                 key={i}
-                className="bg-white rounded-[16px] p-6 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-shadow"
+                className="bg-white rounded-[16px] min-h-[132px] p-5 border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-shadow"
               >
                 <div className={`w-3 h-3 rounded-full ${stat.color}`} />
                 <div>
-                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1 break-words">
                     {stat.title}
                   </p>
                   <div className="flex items-baseline gap-2">
@@ -483,7 +416,7 @@ const Dashboard = () => {
         className="flex flex-col gap-[32px] min-h-0"
       >
         {/* Live Calls Activity */}
-        <section className="bg-white rounded-[16px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
+        <section className="bg-white rounded-[16px] p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100 flex flex-col">
           <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
               Live Calls Activity
@@ -503,7 +436,11 @@ const Dashboard = () => {
               <WeeklyDropdown />
             </div>
           </div>
-          <div className="w-full overflow-x-auto scrollbar-hide">
+          <div
+            className="-mx-4 w-[calc(100%+2rem)] overflow-x-auto overscroll-x-contain px-4 pb-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x] sm:mx-0 sm:w-full sm:px-0"
+            role="region"
+            aria-label="Live calls table"
+          >
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-50">
@@ -530,7 +467,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRecentCalls.length === 0 ? (
+                {recentCalls.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
@@ -540,15 +477,15 @@ const Dashboard = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredRecentCalls.map((call) => (
+                  recentCalls.map((call) => (
                     <tr key={call.id} className="border-b border-gray-50/50 hover:bg-gray-50/30 transition-colors">
-                      <td className="py-4 font-semibold text-gray-900 text-[14px]">
+                      <td className="py-4 pr-4 font-semibold text-gray-900 text-[14px]">
                         {call.contact?.fullName || 'Unknown Agent'}
                       </td>
-                      <td className="py-4 text-gray-500 text-[14px]">
+                      <td className="py-4 pr-4 text-gray-500 text-[14px]">
                         {call.contact?.phone || 'N/A'}
                       </td>
-                      <td className="py-4 text-gray-500 text-[14px]">
+                      <td className="py-4 pr-4 text-gray-500 text-[14px]">
                         {call.duration || '0s'}
                       </td>
                       <td className="py-4">
@@ -564,18 +501,34 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
+          <PaginationFooter
+            page={recentPage}
+            pageSize={recentPageSize}
+            totalItems={recentPagination.totalItems}
+            totalPages={recentPagination.totalPages}
+            itemLabel="calls"
+            onPageChange={setRecentPage}
+            onPageSizeChange={(size) => {
+              setRecentPageSize(size);
+              setRecentPage(1);
+            }}
+          />
         </section>
 
         {/* Agent Performance Overview */}
         <section className="bg-white rounded-[16px] flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-gray-100">
-          <div className="flex items-center justify-between p-6 pb-2">
-            <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a]">
+          <div className="flex flex-col gap-3 p-4 pb-2 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pb-2">
+            <h2 className="text-[20px] font-display font-[900] tracking-tight text-[#1a1a1a] leading-tight">
               Agent Performance Overview
             </h2>
             <WeeklyDropdown />
           </div>
-          <div className="w-full overflow-x-auto scrollbar-hide px-6">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+          <div
+            className="w-full overflow-x-auto overscroll-x-contain px-4 pb-3 [-webkit-overflow-scrolling:touch] [touch-action:pan-x] sm:px-6"
+            role="region"
+            aria-label="Agent performance table"
+          >
+            <table className="w-full text-left border-collapse min-w-[760px]">
               <thead>
                 <tr className="border-b border-gray-50">
                   <th className="py-4 text-gray-400 font-bold text-[11px] uppercase tracking-widest">
@@ -620,7 +573,7 @@ const Dashboard = () => {
                     const isOnline = onlineUserIds.has(item.id);
                     return (
                       <tr key={idx} className="border-b border-gray-50/50 hover:bg-gray-50/30 transition-colors">
-                        <td className="py-4 font-semibold text-gray-900 text-[14px]">
+                        <td className="py-4 pr-4 font-semibold text-gray-900 text-[14px]">
                           <div className="flex items-center gap-2.5">
                             <span className="relative flex h-2.5 w-2.5 shrink-0">
                               {isOnline && (
@@ -628,16 +581,16 @@ const Dashboard = () => {
                               )}
                               <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-gray-300'}`}></span>
                             </span>
-                            <span>{item.agentName}</span>
+                            <span className="whitespace-nowrap">{item.agentName}</span>
                           </div>
                         </td>
-                        <td className="py-4 text-gray-500 text-[14px]">
-                          {item.company}
+                        <td className="py-4 pr-4 text-gray-500 text-[14px]">
+                          <span className="block max-w-[220px] truncate">{item.company}</span>
                         </td>
-                        <td className="py-4 text-gray-900 font-bold text-[14px]">
+                        <td className="py-4 pr-4 text-gray-900 font-bold text-[14px]">
                           {item.callsToday}
                         </td>
-                        <td className="py-4">
+                        <td className="py-4 pr-4">
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 w-16 bg-gray-100 rounded-full overflow-hidden">
                               <div className="h-full bg-[#ADF808]" style={{ width: `${item.connectedPercent}%` }} />
@@ -655,7 +608,22 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-          <Pagination meta={agentPerformanceMeta} onPageChange={setPerfPage} />
+          {agentPerformanceMeta && (
+            <div className="px-4 pb-5 sm:px-6 sm:pb-6">
+              <PaginationFooter
+                page={agentPerformanceMeta.currentPage || perfPage}
+                pageSize={agentPerformanceMeta.itemsPerPage || 5}
+                totalItems={agentPerformanceMeta.totalItems || 0}
+                totalPages={agentPerformanceMeta.totalPages || 1}
+                itemLabel="agents"
+                onPageChange={setPerfPage}
+                onPageSizeChange={(size) => {
+                  setPerfPageSize(size);
+                  setPerfPage(1);
+                }}
+              />
+            </div>
+          )}
         </section>
       </div>
 

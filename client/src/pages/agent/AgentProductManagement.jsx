@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Search, Plus, MoreVertical, X, UploadCloud, ChevronDown } from 'lucide-react';
 import { api } from '../../lib/api';
+import PaginationFooter from '../../components/PaginationFooter';
 
 const PRODUCT_NAMES = ['All products', 'Premium Headset', 'Desk Lamp', 'Air Purifier', 'Fitness Band'];
 const CATEGORIES = ['All categories', 'Cosmetics', 'Electronics', 'Kitchen Appliances', 'Fitness Tracker'];
@@ -60,10 +61,10 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-function SelectFilter({ value, options, onChange, minW = 'min-w-[150px]' }) {
+function SelectFilter({ value, options, onChange, minW = 'sm:min-w-[150px]' }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`relative ${minW}`}>
+    <div className={`relative w-full sm:w-auto ${minW}`}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -273,6 +274,19 @@ export default function AgentProductManagement() {
   };
 
   const filtered = products;
+  const hasActiveFilters =
+    Boolean(search.trim()) ||
+    productName !== PRODUCT_NAMES[0] ||
+    category !== CATEGORIES[0] ||
+    status !== STATUSES[0];
+
+  const clearFilters = () => {
+    setProductName(PRODUCT_NAMES[0]);
+    setCategory(CATEGORIES[0]);
+    setStatus(STATUSES[0]);
+    setSearch('');
+    setCurrentPage(1);
+  };
 
   const fileInputRef = useRef(null);
 
@@ -473,21 +487,21 @@ export default function AgentProductManagement() {
   };
 
   return (
-    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-8">
-        <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">Product Management</h1>
+    <div className="mt-4 w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-4 sm:mt-0 sm:p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
+      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <h1 className="text-[25px] leading-[1.08] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">Product Management</h1>
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1a1a1a] text-white rounded-xl text-[13px] font-bold shadow-sm hover:bg-gray-800 transition-colors self-start"
+          className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 bg-[#1a1a1a] text-white rounded-xl text-[13px] font-bold shadow-sm hover:bg-gray-800 transition-colors sm:w-auto sm:self-start"
         >
           <Plus className="w-4 h-4" strokeWidth={2.5} />
           Add New Product
         </button>
       </div>
 
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6 flex-wrap">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-5 sm:mb-6 flex-wrap">
+        <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
           <SelectFilter value={productName} options={PRODUCT_NAMES} onChange={setProductName} />
           <SelectFilter value={category} options={CATEGORIES} onChange={setCategory} />
           <SelectFilter value={status} options={STATUSES} onChange={setStatus} />
@@ -504,7 +518,8 @@ export default function AgentProductManagement() {
         </div>
       </div>
 
-      <div className="w-full rounded-xl ring-1 ring-gray-200/50 overflow-visible no-scrollbar">
+      {filtered.length > 0 && (
+        <div className="company-table-scroll w-full overflow-x-auto overscroll-x-contain rounded-xl ring-1 ring-gray-200/50 [-webkit-overflow-scrolling:touch]">
         <table className="w-full text-left border-collapse min-w-[880px]">
           <thead>
             <tr className="border-b border-gray-100 bg-[#fafafa] text-[11px] font-bold text-gray-400">
@@ -518,23 +533,7 @@ export default function AgentProductManagement() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={7} className="p-12 text-center text-sm font-semibold text-gray-400">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
-                    Loading products...
-                  </div>
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-12 text-center text-sm font-semibold text-gray-500">
-                  No products match filters.
-                </td>
-              </tr>
-            ) : (
-              filtered.map((row, idx) => (
+              {filtered.map((row, idx) => (
                 <tr
                   key={row.id}
                   className={`border-b border-gray-50 ${idx % 2 === 1 ? 'bg-gray-50/40' : ''} hover:bg-gray-50/80`}
@@ -597,53 +596,67 @@ export default function AgentProductManagement() {
                     )}
                   </td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
 
-      {/* Pagination Footer */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 flex-wrap gap-4 select-none">
-          <div className="text-[13px] font-semibold text-gray-500">
-            Showing <span className="text-gray-900 font-bold">{(currentPage - 1) * 5 + 1}</span> to{' '}
-            <span className="text-gray-900 font-bold">{Math.min(currentPage * 5, totalItems)}</span> of{' '}
-            <span className="text-gray-900 font-bold">{totalItems}</span> products
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 text-[13px] font-bold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => handlePageChange(p)}
-                className={`w-9 h-9 rounded-lg text-[13px] font-bold flex items-center justify-center transition-all ${
-                  currentPage === p
-                    ? 'bg-gradient-to-r from-[#ADF808] to-[#5AD43D] text-[#1c4714] shadow-sm'
-                    : 'border border-gray-200 text-gray-700 bg-white hover:bg-gray-50'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-              className="px-3 py-1.5 rounded-lg border border-gray-200 text-[13px] font-bold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+      {loading && (
+        <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-gray-200/70 bg-white px-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-sm font-semibold text-gray-500">
+            <span className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-gray-800 animate-spin" />
+            Loading products...
           </div>
         </div>
+      )}
+
+      {!loading && filtered.length === 0 && (
+        <div className="overflow-hidden rounded-xl border border-gray-200/70 bg-white px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-9 sm:pt-7">
+          <div className="mx-auto flex max-w-[420px] flex-col items-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f8f9fb] text-gray-400 ring-1 ring-gray-200 sm:h-14 sm:w-14">
+              {hasActiveFilters ? <Search className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+            </div>
+            <h3 className="text-[16px] font-extrabold text-gray-900">
+              {hasActiveFilters ? 'No products match your filters' : 'No products yet'}
+            </h3>
+            <p className="mt-2 text-[13px] font-medium leading-relaxed text-gray-500 sm:max-w-[330px]">
+              {hasActiveFilters
+                ? 'Try another product name, category, status, or search term.'
+                : 'Add your first product so it appears in this catalogue for tracking stock and sales.'}
+            </p>
+            <div className="mt-5 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[13px] font-bold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                >
+                  Clear filters
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={openAdd}
+                className="inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-xl bg-[#1a1a1a] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-gray-800 sm:w-auto sm:min-w-[190px]"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                Add New Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!loading && filtered.length > 0 && (
+        <PaginationFooter
+          page={currentPage}
+          pageSize={5}
+          totalItems={totalItems}
+          totalPages={totalPages}
+          itemLabel="products"
+          onPageChange={handlePageChange}
+        />
       )}
 
       {showAdd && formModal('Add product', () => setShowAdd(false))}

@@ -10,10 +10,12 @@ import {
   PhoneCall,
   Plus,
   Eye,
-  X,
   ChevronDown,
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import ContactDetailModal from '../../components/modals/ContactDetailModal';
+import QuickNoteModal from '../../components/modals/QuickNoteModal';
+import PaginationFooter from '../../components/PaginationFooter';
 
 const STATUS_OPTIONS = [
   { id: 'all', label: 'All statuses' },
@@ -32,11 +34,11 @@ function PillDropdown({ label, value, options, onChange, renderOption }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.id === value) || options[0];
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-between gap-2 min-w-[140px] px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 shadow-sm hover:bg-gray-50/80 transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-800 shadow-sm hover:bg-gray-50/80 transition-colors sm:min-w-[140px]"
       >
         <span className="truncate">{selected.label}</span>
         <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -71,13 +73,16 @@ export default function AgentContactManagement() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [menuId, setMenuId] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [noteModal, setNoteModal] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -128,6 +133,30 @@ export default function AgentContactManagement() {
     }
   };
 
+  const handleSaveNote = async () => {
+    if (!noteModal) return;
+    setSavingNote(true);
+    setError('');
+    try {
+      const { data } = await api.patch(`/contacts/${noteModal.id}`, { notes: noteText });
+      const updated = data?.contact || { ...noteModal, notes: noteText };
+      setContacts((prev) => prev.map((contact) => (contact.id === noteModal.id ? { ...contact, notes: updated.notes } : contact)));
+      setNoteModal(null);
+      setNoteText('');
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to save note.');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const openNoteModal = (contact) => {
+    setNoteModal(contact);
+    setNoteText(contact.notes || '');
+    setSelectedContact(null);
+    setMenuId(null);
+  };
+
   useEffect(() => {
     fetchContacts();
   }, [page, debouncedSearch]);
@@ -155,10 +184,10 @@ export default function AgentContactManagement() {
   };
 
   return (
-    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-4 sm:p-6 md:p-8 flex flex-col animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-7 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
+          <h1 className="text-[26px] leading-tight md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight">
             Contact Management
           </h1>
           <p className="text-[13px] font-bold text-gray-500 mt-1">
@@ -168,7 +197,7 @@ export default function AgentContactManagement() {
       </div>
 
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
           <PillDropdown
             label="Status"
             value={statusFilter}
@@ -207,47 +236,66 @@ export default function AgentContactManagement() {
         </div>
       )}
 
-      <div className="flex-1 w-full overflow-x-auto rounded-xl ring-1 ring-gray-200/50 -mx-1">
-        <table className="w-full text-left border-collapse min-w-[960px]">
-          <thead>
-            <tr className="border-b border-gray-100 bg-[#fafafa] text-[11px] font-bold text-gray-400">
-              <th className="p-4 w-10">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5" /> Contact Name
-                </span>
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5" /> Phone Number
-                </span>
-              </th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5" /> Company
-                </span>
-              </th>
-              <th className="p-4 py-3">Status</th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5" /> Assigned Date
-                </span>
-              </th>
-              <th className="p-4 py-3">Attempts</th>
-              <th className="p-4 py-3">
-                <span className="inline-flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5" /> Notes
-                </span>
-              </th>
-              <th className="p-4 py-3 text-center w-12">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && filteredContacts.map((contact, idx) => (
-              <tr key={contact.id} className={`border-b border-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50/80`}>
-                <td className="p-4">
+      {success && (
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+          {success}
+        </div>
+      )}
+
+      {!loading && filteredContacts.length > 0 && (
+        <div className="company-table-scroll w-full overflow-x-auto overscroll-x-contain rounded-xl ring-1 ring-gray-200/50 [-webkit-overflow-scrolling:touch]">
+          <table className="w-full text-left border-collapse min-w-[960px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-[#fafafa] text-[11px] font-bold text-gray-400">
+                <th className="p-4 w-10">
+                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5" /> Contact Name
+                  </span>
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5" /> Phone Number
+                  </span>
+                </th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5" /> Company
+                  </span>
+                </th>
+                <th className="p-4 py-3">Status</th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5" /> Assigned Date
+                  </span>
+                </th>
+                <th className="p-4 py-3">Attempts</th>
+                <th className="p-4 py-3">
+                  <span className="inline-flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Notes
+                  </span>
+                </th>
+                <th className="p-4 py-3 text-center w-12">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContacts.map((contact, idx) => (
+              <tr
+                key={contact.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedContact(contact)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedContact(contact);
+                  }
+                }}
+                className={`cursor-pointer border-b border-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'} hover:bg-gray-50/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8bed21]/40`}
+              >
+                <td className="p-4" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" className="w-4 h-4 rounded border-gray-300" readOnly />
                 </td>
                 <td className="p-4 text-[13px] font-bold text-gray-800">{contact.fullName}</td>
@@ -265,8 +313,12 @@ export default function AgentContactManagement() {
                 <td className="p-4">{statusPill(contact.status)}</td>
                 <td className="p-4 text-[13px] font-semibold text-gray-600 whitespace-nowrap">{formatDate(contact.createdAt)}</td>
                 <td className="p-4 text-[13px] font-bold text-gray-800 tabular-nums">1</td>
-                <td className="p-4 text-[13px] font-semibold text-gray-600">Assigned</td>
-                <td className="p-4 text-center relative">
+                <td className="p-4 text-[13px] font-semibold text-gray-600">
+                  <span title={contact.notes || ''} className={contact.notes ? 'line-clamp-2 block max-w-[220px]' : 'text-gray-400'}>
+                    {contact.notes || '-'}
+                  </span>
+                </td>
+                <td className="p-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={() => setMenuId(menuId === contact.id ? null : contact.id)}
@@ -278,7 +330,17 @@ export default function AgentContactManagement() {
                   {menuId === contact.id && (
                     <>
                       <button type="button" className="fixed inset-0 z-20" onClick={() => setMenuId(null)} aria-hidden="true" />
-                      <div className="absolute right-4 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 text-left">
+                      <div className="absolute right-4 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 text-left" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
+                          onClick={() => {
+                            setSelectedContact(contact);
+                            setMenuId(null);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" /> View Details
+                        </button>
                         <button
                           type="button"
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
@@ -289,11 +351,7 @@ export default function AgentContactManagement() {
                         <button
                           type="button"
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
-                          onClick={() => {
-                            setNoteModal(contact);
-                            setNoteText('');
-                            setMenuId(null);
-                          }}
+                          onClick={() => openNoteModal(contact)}
                         >
                           <Plus className="w-4 h-4" /> Add Quick Note
                         </button>
@@ -302,10 +360,11 @@ export default function AgentContactManagement() {
                   )}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {loading && (
         <div className="text-center py-12 text-sm font-semibold text-gray-500">
@@ -314,72 +373,44 @@ export default function AgentContactManagement() {
       )}
 
       {!loading && filteredContacts.length === 0 && (
-        <p className="text-center py-12 text-sm font-semibold text-gray-500">
-          No contacts assigned to your account yet.
-        </p>
-      )}
-
-      {/* Pagination controls */}
-      {!loading && pagination.totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-          <p className="text-[13px] font-semibold text-gray-500">
-            Showing {filteredContacts.length} of {pagination.totalItems} contacts
+        <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-gray-200/70 bg-white px-4 text-center">
+          <p className="text-sm font-semibold text-gray-500">
+            No contacts assigned to your account yet.
           </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50 transition-opacity"
-            >
-              Previous
-            </button>
-            <span className="text-[13px] font-bold text-gray-800 px-2">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <button
-              type="button"
-              disabled={page >= pagination.totalPages}
-              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-              className="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50 transition-opacity"
-            >
-              Next
-            </button>
-          </div>
         </div>
       )}
 
-      {noteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-6 relative animate-in zoom-in-95">
-            <button
-              type="button"
-              onClick={() => setNoteModal(null)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-900"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-[20px] font-bold text-gray-900 mb-1">Add Quick Note</h2>
-            <p className="text-[13px] font-medium text-gray-500 mb-6">Add a note related to this contact.</p>
-            <label className="block text-[13px] font-bold text-gray-900 mb-2">Note</label>
-            <textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Type your note.."
-              rows={5}
-              className="w-full bg-[#f8f9fb] border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40 resize-none"
-            />
-            <button
-              type="button"
-              onClick={() => setNoteModal(null)}
-              className="mt-6 w-full py-3.5 rounded-xl bg-gradient-to-r from-[#8bed21] to-[#5AD43D] text-gray-900 text-[15px] font-bold shadow-sm hover:opacity-95 transition-opacity"
-            >
-              Add Note
-            </button>
-          </div>
-        </div>
+      {!loading && filteredContacts.length > 0 && (
+        <PaginationFooter
+          page={page}
+          pageSize={pageSize}
+          totalItems={statusFilter === 'all' ? pagination.totalItems : filteredContacts.length}
+          totalPages={statusFilter === 'all' ? pagination.totalPages : 1}
+          itemLabel="contacts"
+          onPageChange={setPage}
+        />
       )}
+
+      <ContactDetailModal
+        contact={selectedContact}
+        onClose={() => setSelectedContact(null)}
+        onCall={(contact) => {
+          setSelectedContact(null);
+          handleCallNow(contact);
+        }}
+        onEditNote={openNoteModal}
+        formatDate={formatDate}
+        renderStatus={statusPill}
+      />
+
+      <QuickNoteModal
+        open={Boolean(noteModal)}
+        noteText={noteText}
+        saving={savingNote}
+        onChange={setNoteText}
+        onClose={() => setNoteModal(null)}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 }

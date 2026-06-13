@@ -1,19 +1,35 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LineChart, Line 
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 
-const mockBarData = [
-  { name: 'Jan', value: 3 },
-  { name: 'Feb', value: 45 },
-  { name: 'Mar', value: 25 },
-  { name: 'Apr', value: 45 },
-  { name: 'May', value: 65 },
-  { name: 'Jun', value: 40 },
+const callStats = [
+  { label: 'Total Calls', value: '1,245', trend: '18.4%', up: true },
+  { label: 'Connected Calls', value: '892', trend: '12.8%', up: true },
+  { label: 'No Answer', value: '176', trend: '4.6%', up: false },
+  { label: 'Busy', value: '94', trend: '2.1%', up: false },
+  { label: 'Failed', value: '83', trend: '6.3%', up: false },
 ];
 
-const mockLineData = [
+const callChartData = [
+  { name: 'Jan', value: 120 },
+  { name: 'Feb', value: 185 },
+  { name: 'Mar', value: 260 },
+  { name: 'Apr', value: 210 },
+  { name: 'May', value: 330 },
+  { name: 'Jun', value: 290 },
+];
+
+const revenueChartData = [
   { name: 'JAN', current: 80, previous: 80 },
   { name: 'FEB', current: 160, previous: 140 },
   { name: 'MAR', current: 180, previous: 120 },
@@ -28,218 +44,188 @@ const mockLineData = [
   { name: 'DEC', current: 350, previous: 210 },
 ];
 
-const CustomBar = (props) => {
-  const { x, y, width, height, fill } = props;
-  const radius = 10;
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+
   return (
-    <g>
-      <defs>
-        <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#8bed21" stopOpacity={1} />
-          <stop offset="100%" stopColor="#d1fae5" stopOpacity={1} />
-        </linearGradient>
-      </defs>
-      <path
-        d={`M${x},${y + radius} a${radius},${radius} 0 0,1 ${radius},-${radius} h${width - 2 * radius} a${radius},${radius} 0 0,1 ${radius},${radius} v${height - radius} a${radius},${radius} 0 0,1 -${radius},${radius} h-${width - 2 * radius} a${radius},${radius} 0 0,1 -${radius},-${radius} z`}
-        fill="url(#barGradient)"
-      />
-    </g>
+    <div className="rounded-xl bg-white px-3 py-2 text-[12px] font-bold text-gray-800 shadow-lg ring-1 ring-gray-100">
+      <p className="mb-1 text-gray-500">{label}</p>
+      {payload.map((entry) => (
+        <div key={`${entry.name}-${entry.value}`} className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          {entry.name}: {entry.value}
+        </div>
+      ))}
+    </div>
   );
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white px-3 py-2 shadow-lg rounded-xl ring-1 ring-gray-100 text-[12px] font-bold text-gray-800">
-        <p className="mb-1 text-gray-500">{label}</p>
-        {payload.map((entry, index) => (
-          <div key={`item-${index}`} className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
-            {entry.name}: {entry.value}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const FilterButton = ({ children, icon }) => (
+  <button className="flex min-w-0 items-center justify-between gap-2 rounded-xl bg-[#f8f9fb] px-3 py-2 text-[12px] font-bold text-gray-700 transition-colors hover:bg-gray-100">
+    {icon}
+    <span className="truncate">{children}</span>
+    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+  </button>
+);
 
 const Reports = () => {
   return (
-    <div className="w-full bg-[#f4f5f7] min-h-full py-4 flex flex-col animate-in fade-in duration-500" style={{ gap: '16px' }}>
-      
-      {/* Header & Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 border max-w-max p-1 rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-          <h1 className="text-[20px] font-['SF_Compact',_system-ui] font-[790] text-gray-900 tracking-tight px-4 border-r border-gray-100">
+    <div className="flex min-h-full w-full min-w-0 flex-col gap-4 bg-[#f4f5f7] py-4 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full min-w-0 flex-col gap-3 rounded-2xl border bg-white p-3 shadow-sm ring-1 ring-gray-100 sm:flex-row sm:items-center lg:w-auto">
+          <h1 className="text-[20px] font-[790] tracking-tight text-gray-900 sm:border-r sm:border-gray-100 sm:px-4">
             Reports & Analytics
           </h1>
-          <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-[#f8f9fb] rounded-xl text-[12px] font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-              <span className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[8px] text-blue-600">C</span>
-              Company <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-            </button>
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-[#f8f9fb] rounded-xl text-[12px] font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-              Agent name <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-            </button>
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-[#f8f9fb] rounded-xl text-[12px] font-bold text-gray-700 hover:bg-gray-100 transition-colors">
-              Date range <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-            </button>
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto">
+            <FilterButton
+              icon={<span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[8px] text-blue-600">C</span>}
+            >
+              Company
+            </FilterButton>
+            <FilterButton>Agent name</FilterButton>
+            <FilterButton>Date range</FilterButton>
           </div>
         </div>
-        
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 shadow-sm rounded-xl text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-          Weekly <ChevronDown className="w-4 h-4 text-gray-400" />
+
+        <button className="flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-[13px] font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 sm:w-auto">
+          Weekly <ChevronDown className="h-4 w-4 text-gray-400" />
         </button>
       </div>
 
-      {/* Call Statistics Block */}
-      <div 
-        className="w-full rounded-[24px] overflow-hidden shadow-sm flex flex-col"
-        style={{ 
-          background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)',
-          minHeight: '605px',
-          gap: '16px'
-        }}
+      <section
+        className="block w-full min-w-0 rounded-[20px] p-1 shadow-sm sm:rounded-[24px]"
+        style={{ background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
       >
-        <div className="px-6 py-4 shrink-0">
+        <div className="px-5 py-4 sm:px-6">
           <h2 className="text-[16px] font-bold text-[#1a1a1a]">Call Statistics</h2>
         </div>
-        <div className="bg-white rounded-[24px] m-1 ring-1 ring-gray-100 shadow-inner flex-1 flex flex-col">
-          
-          <div className="p-6 md:p-8 flex-1 flex flex-col">
-            <h3 className="text-[13px] font-bold text-gray-400 mb-8">Contacts Overview</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-              {[
-                { label: 'Total Calls', val: '1,000', up: true },
-                { label: 'Connected Calls', val: '42,310', up: false },
-                { label: 'No Answer', val: '42,310', up: false },
-                { label: 'Busy', val: '42,310', up: false },
-                { label: 'Failed', val: '1,240', up: false },
-              ].map((stat, idx) => (
-                <div key={idx} className="flex flex-col">
-                  <span className="text-[12px] font-bold text-gray-500 mb-1">{stat.label}</span>
-                  <div className="flex items-end gap-2">
-                    <span className="text-[32px] font-['SF_Compact',_system-ui] font-[790] text-gray-900 leading-none tracking-tight">{stat.val}</span>
-                    <span className={`flex items-center text-[10px] font-bold pb-1 ${stat.up ? 'text-green-500' : 'text-red-500'}`}>
-                      {stat.up ? '↑' : '↓'} 30.2%
+
+        <div className="min-h-[520px] rounded-[20px] bg-white shadow-inner ring-1 ring-gray-100 sm:rounded-[24px]">
+          <div className="flex flex-col p-5 sm:p-6 md:p-8">
+            <h3 className="mb-6 text-[13px] font-bold text-gray-400 sm:mb-8">Contacts Overview</h3>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+              {callStats.map((stat) => (
+                <div key={stat.label} className="flex flex-col">
+                  <span className="mb-1 text-[12px] font-bold text-gray-500">{stat.label}</span>
+                  <div className="flex flex-wrap items-end gap-2">
+                    <span className="text-[28px] font-[790] leading-none tracking-tight text-gray-900 sm:text-[32px]">
+                      {stat.value}
+                    </span>
+                    <span className={`pb-1 text-[10px] font-bold ${stat.up ? 'text-green-500' : 'text-red-500'}`}>
+                      {stat.up ? '+' : '-'} {stat.trend}
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium text-gray-400 mt-0.5">Vs last week</span>
+                  <span className="mt-0.5 text-[10px] font-medium text-gray-400">Vs last week</span>
                 </div>
               ))}
             </div>
-            
-            <div className="h-px bg-gray-100 w-full my-8"></div>
-            
-            <h3 className="text-[13px] font-bold text-gray-400 mb-6">Total Calls</h3>
-            <div className="flex-1 w-full" style={{ minHeight: '220px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockBarData} barSize={28}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }} 
-                    dy={10} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }} 
-                    dx={-10}
-                  />
-                  <RechartsTooltip cursor={{fill: 'transparent'}} content={<CustomTooltip />} />
-                  <Bar dataKey="value" shape={<CustomBar />} radius={[10, 10, 10, 10]} />
-                </BarChart>
-              </ResponsiveContainer>
+
+            <div className="my-6 h-px w-full bg-gray-100 sm:my-8" />
+
+            <h3 className="mb-6 text-[13px] font-bold text-gray-400">Total Calls</h3>
+            <div className="company-table-scroll w-full overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch]">
+              <div className="h-[240px] min-w-[520px] sm:min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={callChartData} barSize={28}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }}
+                      dx={-10}
+                    />
+                    <RechartsTooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
+                    <Bar dataKey="value" fill="#8bed21" radius={[10, 10, 10, 10]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
-
         </div>
-      </div>
+      </section>
 
-      {/* Generated Revenue Block */}
-      <div 
-        className="w-full flex flex-col"
-        style={{ minHeight: '746px', gap: '31px' }}
-      >
-        {/* Revenue Header */}
-        <div className="flex items-center justify-between px-2">
-          <h2 className="text-[22px] font-['SF_Compact',_system-ui] font-[790] text-gray-900 tracking-tight">Generated Revenue</h2>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-xl text-[12px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-            This Month <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+      <section className="flex w-full min-w-0 flex-col gap-6">
+        <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between sm:px-2">
+          <h2 className="text-[22px] font-[790] tracking-tight text-gray-900">Generated Revenue</h2>
+          <button className="flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-[12px] font-bold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 sm:w-auto">
+            This Month <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           </button>
         </div>
 
-        {/* Revenue Card */}
-        <div 
-          className="w-full rounded-[24px] overflow-hidden shadow-sm flex flex-col flex-1"
+        <div
+          className="flex w-full min-w-0 flex-col overflow-hidden rounded-[20px] shadow-sm sm:rounded-[24px]"
           style={{ background: 'linear-gradient(90deg, #ADF808 19%, #5AD43D 89%)' }}
         >
-          <div className="px-8 py-5 flex items-center gap-12 shrink-0">
-            <div>
-              <span className="text-[13px] font-bold text-gray-800 opacity-90 block mb-1">Total Revenue</span>
-              <div className="flex items-end gap-3 text-[#1a1a1a]">
-                <div className="w-3 h-3 rounded-sm bg-[#58c005] mb-1.5"></div>
-                <span className="text-[28px] font-['SF_Compact',_system-ui] font-[790] tracking-tight leading-none">$5000</span>
-                <span className="text-[11px] font-bold pb-1 text-gray-800 opacity-80">↑ 30% then last week</span>
+          <div className="grid shrink-0 grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 sm:px-8 lg:flex lg:items-center lg:gap-12">
+            <div className="min-w-0">
+              <span className="mb-1 block text-[13px] font-bold text-gray-800 opacity-90">Total Revenue</span>
+              <div className="flex flex-wrap items-end gap-2 text-[#1a1a1a] sm:gap-3">
+                <div className="mb-1.5 h-3 w-3 rounded-sm bg-[#58c005]" />
+                <span className="text-[26px] font-[790] leading-none tracking-tight sm:text-[28px]">$5000</span>
+                <span className="pb-1 text-[11px] font-bold text-gray-800 opacity-80">+ 30% vs last week</span>
               </div>
             </div>
-            <div>
-              <span className="text-[13px] font-bold text-gray-800 opacity-90 block mb-1">Refunded</span>
-              <div className="flex items-end gap-3 text-[#1a1a1a]">
-                <div className="w-3 h-3 rounded-sm bg-white mb-1.5"></div>
-                <span className="text-[28px] font-['SF_Compact',_system-ui] font-[790] tracking-tight leading-none">$2000</span>
-                <span className="text-[11px] font-bold pb-1 text-gray-800 opacity-80">↑ 30% then last week</span>
+            <div className="min-w-0">
+              <span className="mb-1 block text-[13px] font-bold text-gray-800 opacity-90">Refunded</span>
+              <div className="flex flex-wrap items-end gap-2 text-[#1a1a1a] sm:gap-3">
+                <div className="mb-1.5 h-3 w-3 rounded-sm bg-white" />
+                <span className="text-[26px] font-[790] leading-none tracking-tight sm:text-[28px]">$2000</span>
+                <span className="pb-1 text-[11px] font-bold text-gray-800 opacity-80">+ 30% vs last week</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-[24px] m-1 ring-1 ring-gray-100 shadow-inner p-6 md:p-8 flex-1 flex flex-col">
-            <div className="flex-1 w-full" style={{ minHeight: '350px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockLineData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E5E7EB" horizontal={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 'bold' }} 
-                    dy={15} 
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }} 
-                    dx={-10}
-                  />
-                  <RechartsTooltip content={<CustomTooltip />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="current" 
-                    stroke="#58c005" 
-                    strokeWidth={3} 
-                    dot={false} 
-                    activeDot={{ r: 6, fill: '#58c005', stroke: '#fff', strokeWidth: 2 }} 
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="previous" 
-                    stroke="#bbf7d0" 
-                    strokeWidth={3} 
-                    dot={false}
-                    activeDot={{ r: 6, fill: '#bbf7d0', stroke: '#fff', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+          <div className="m-1 flex flex-col rounded-[20px] bg-white p-5 shadow-inner ring-1 ring-gray-100 sm:rounded-[24px] sm:p-6 md:p-8">
+            <div className="company-table-scroll w-full overflow-x-auto pb-2 [-webkit-overflow-scrolling:touch]">
+              <div className="h-[320px] min-w-[680px] sm:min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueChartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical stroke="#E5E7EB" horizontal={false} />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 10, fontWeight: 'bold' }}
+                      dy={15}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9CA3AF', fontSize: 11, fontWeight: 'bold' }}
+                      dx={-10}
+                    />
+                    <RechartsTooltip content={<CustomTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="current"
+                      stroke="#58c005"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#58c005', stroke: '#fff', strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="previous"
+                      stroke="#bbf7d0"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 6, fill: '#bbf7d0', stroke: '#fff', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
+      </section>
     </div>
   );
 };

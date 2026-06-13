@@ -6,6 +6,16 @@ import { useAuth } from '../../context/AuthContext';
 const FONTS = ['Inter', 'Poppins', 'Montserrat', 'Roboto', 'DM Sans'];
 const DEFAULT_PRIMARY = '#000000';
 const DEFAULT_SECONDARY = '#111111';
+const NAME_PATTERN = /^[A-Za-z][A-Za-z\s'-]{1,63}$/;
+
+const validateName = (value, label) => {
+  const trimmed = value.trim();
+  if (!trimmed) return `${label} is required.`;
+  if (trimmed.length < 2) return `${label} must be at least 2 characters.`;
+  if (trimmed.length > 64) return `${label} must be 64 characters or less.`;
+  if (!NAME_PATTERN.test(trimmed)) return `${label} can only include letters, spaces, apostrophes, and hyphens.`;
+  return '';
+};
 
 export default function AgentSettings() {
   const { user, refreshMe } = useAuth();
@@ -15,6 +25,7 @@ export default function AgentSettings() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [account, setAccount] = useState({
     firstName: '',
@@ -98,15 +109,28 @@ export default function AgentSettings() {
     }
   };
 
+  const validateForm = () => {
+    const nextErrors = {
+      firstName: validateName(account.firstName, 'First name'),
+      lastName: validateName(account.lastName, 'Last name'),
+    };
+    Object.keys(nextErrors).forEach((key) => {
+      if (!nextErrors[key]) delete nextErrors[key];
+    });
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
     setSuccess('');
+    if (!validateForm()) return;
+    setSaving(true);
     try {
       const accountPayload = {
-        firstName: account.firstName,
-        lastName: account.lastName,
+        firstName: account.firstName.trim(),
+        lastName: account.lastName.trim(),
         username: account.username,
         phone: account.phone,
         sipExtension: account.sipExtension,
@@ -137,8 +161,8 @@ export default function AgentSettings() {
   };
 
   return (
-    <div className="w-full bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-gray-200/60 min-h-full p-6 md:p-10 flex flex-col animate-in fade-in duration-500">
-      <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight mb-10">Settings</h1>
+    <div className="mx-auto w-full max-w-6xl rounded-[24px] bg-white p-6 pb-10 shadow-sm ring-1 ring-gray-100 md:p-10 md:pb-12 animate-in fade-in duration-500">
+      <h1 className="text-[28px] md:text-[32px] font-display font-[900] text-[#1a1a1a] tracking-tight mb-8 md:mb-10">Settings</h1>
       {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700">{error}</div>}
       {success && <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700">{success}</div>}
 
@@ -152,16 +176,22 @@ export default function AgentSettings() {
             Update your personal details and password. Your login email cannot be edited here.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+          <div className="grid w-full max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
             <div>
               <label className="block text-[13px] font-bold text-gray-800 mb-2">First Name</label>
               <input
                 type="text"
                 disabled={loading}
                 value={account.firstName}
-                onChange={(e) => setAccount((prev) => ({ ...prev, firstName: e.target.value }))}
-                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+                onChange={(e) => {
+                  setAccount((prev) => ({ ...prev, firstName: e.target.value }));
+                  setFieldErrors((prev) => ({ ...prev, firstName: '' }));
+                }}
+                className={`w-full bg-[#f8f9fb] border py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 ${
+                  fieldErrors.firstName ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-[#8bed21]/40'
+                }`}
               />
+              {fieldErrors.firstName && <p className="mt-1.5 text-[12px] font-semibold text-red-600">{fieldErrors.firstName}</p>}
             </div>
             <div>
               <label className="block text-[13px] font-bold text-gray-800 mb-2">Last Name</label>
@@ -169,9 +199,15 @@ export default function AgentSettings() {
                 type="text"
                 disabled={loading}
                 value={account.lastName}
-                onChange={(e) => setAccount((prev) => ({ ...prev, lastName: e.target.value }))}
-                className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
+                onChange={(e) => {
+                  setAccount((prev) => ({ ...prev, lastName: e.target.value }));
+                  setFieldErrors((prev) => ({ ...prev, lastName: '' }));
+                }}
+                className={`w-full bg-[#f8f9fb] border py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 ${
+                  fieldErrors.lastName ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-[#8bed21]/40'
+                }`}
               />
+              {fieldErrors.lastName && <p className="mt-1.5 text-[12px] font-semibold text-red-600">{fieldErrors.lastName}</p>}
             </div>
             <div>
               <label className="block text-[13px] font-bold text-gray-800 mb-2">Username</label>
@@ -214,7 +250,7 @@ export default function AgentSettings() {
                 className="w-full bg-[#f8f9fb] border border-gray-200 py-3.5 px-4 rounded-xl text-[14px] font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8bed21]/40"
               />
             </div>
-            <div className="md:col-span-2 max-w-md">
+            <div className="sm:col-span-2 max-w-xl">
               <label className="block text-[13px] font-bold text-gray-800 mb-2">New Password</label>
               <div className="relative">
                 <input
@@ -249,7 +285,7 @@ export default function AgentSettings() {
             Update your company details.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
+          <div className="grid w-full max-w-3xl grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
             <div>
               <label className="block text-[13px] font-bold text-gray-800 mb-2">Company Name</label>
               <input
@@ -285,7 +321,7 @@ export default function AgentSettings() {
               : 'Your current subscription does not include white-label customization.'}
           </p>
 
-          <div className="mb-8 max-w-xl">
+          <div className="mb-8 w-full max-w-3xl">
             <label className="block text-[13px] font-bold text-gray-800 mb-3">Logo</label>
             <input
               ref={fileInputRef}
@@ -311,7 +347,7 @@ export default function AgentSettings() {
             </button>
           </div>
 
-          <div className="space-y-6 max-w-xl">
+          <div className="grid w-full max-w-3xl grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <p className="text-[13px] font-bold text-gray-800 mb-3">Primary Brand Color</p>
               <input
@@ -332,7 +368,7 @@ export default function AgentSettings() {
                 className="h-10 w-16 rounded-md border border-gray-200 bg-transparent disabled:opacity-60"
               />
             </div>
-            <div className="relative max-w-md">
+            <div className="relative sm:col-span-2 max-w-xl">
               <label className="block text-[13px] font-bold text-gray-800 mb-2">Font</label>
               <select
                 disabled={!branding.whiteLabelEnabled || loading}

@@ -1,5 +1,6 @@
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
+const { Op } = require('sequelize');
 const { Company, SubscriptionPlan, SubscriptionHistory } = require('../models');
 
 /**
@@ -65,9 +66,25 @@ const getSubscriptionHistory = catchAsync(async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 20, 1), 100);
     const offset = (page - 1) * pageSize;
+    const search = String(req.query.search || '').trim();
+    const cycle = String(req.query.cycle || '').trim().toLowerCase();
+    const where = { companyId: user.companyId };
+
+    if (['monthly', 'yearly'].includes(cycle)) {
+        where.billingCycle = cycle;
+    }
+
+    if (search) {
+        where[Op.or] = [
+            { planName: { [Op.like]: `%${search}%` } },
+            { action: { [Op.like]: `%${search}%` } },
+            { status: { [Op.like]: `%${search}%` } },
+            { billingCycle: { [Op.like]: `%${search}%` } },
+        ];
+    }
 
     const { rows, count } = await SubscriptionHistory.findAndCountAll({
-        where: { companyId: user.companyId },
+        where,
         order: [['date', 'DESC'], ['id', 'DESC']],
         limit: pageSize,
         offset,

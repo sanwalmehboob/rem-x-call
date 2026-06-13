@@ -111,7 +111,7 @@ const DashboardLayout = () => {
   }, [isProfileMenuOpen]);
 
   return (
-    <div className="flex h-screen min-h-0 w-full bg-[#f4f5f7] font-['Inter',_system-ui,_sans-serif] overflow-hidden relative">
+    <div className="flex h-screen h-dvh min-h-0 w-full bg-[#f4f5f7] font-['Inter',_system-ui,_sans-serif] overflow-hidden relative">
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div 
@@ -294,7 +294,7 @@ const DashboardLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f5f7]">
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#f4f5f7]">
         <InboxPanel isOpen={isNotificationsOpen} />
         
         {/* Top Header */}
@@ -339,7 +339,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Scrolls here: gray bg is the main column; white cards move inside this area */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-12 pt-2 [-webkit-overflow-scrolling:touch] lg:px-8 scrollbar-hide">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-4 pb-12 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] lg:px-8">
           <Outlet />
         </div>
       </main>
